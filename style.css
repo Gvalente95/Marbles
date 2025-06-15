@@ -21,10 +21,10 @@ html, body {
 	overflow: hidden;
 	touch-action: none;
 }
-
+/* 
 * {
 	touch-action: none !important;
-}
+} */
 
 #controls {
   position: fixed;
