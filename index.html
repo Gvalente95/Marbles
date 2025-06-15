@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+<html>
+  <link rel="stylesheet" href="style.css" />
+  <body>
+    <script src="js/init.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/update.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/tools.js"></script>
+    <script src="js/audio.js"></script>
+    <div id="controls">
+      <label
+        >Dots amount: <span id="amount"></span> / <span id="maxDots"></span
+      ></label>
+    </div>
+    <script>
+      let au = new AudioManager();
+      let params = {
+        amount: 5,
+        yGravity: 0.5,
+        xGravity: 0,
+        xDrag: 0.01,
+        yDrag: 0,
+        bounceFactor: 0.3,
+        minSize: 2,
+        maxSize: 50,
+        maxDots: 1000,
+        selfCollision: true,
+      };
+      let {
+        amount,
+        yGravity,
+        xGravity,
+        xDrag,
+        yDrag,
+        bounceFactor,
+        minSize,
+        maxSize,
+        maxDots,
+        selfCollision,
+      } = params;
+
+      let dots = [];
+      let boxes = [];
+	  let curBox = null;
+      let keys = {};
+      let mousePressed = false;
+      let mouseX, mouseY;
+      let timeClick = 0;
+      let isGrowingDot = false;
+      let clickStartTime = 0;
+      let selDot = null;
+      update();
+    </script>
+  </body>
+</html>
