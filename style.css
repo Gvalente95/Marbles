@@ -13,7 +13,7 @@
 	box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
 	backdrop-filter: blur(3px);
 }
-
+/* 
 html, body {
 	margin: 0;
 	padding: 0;
@@ -24,7 +24,7 @@ html, body {
 /* 
 * {
 	touch-action: none !important;
-} */
+} */ */
 
 #controls {
   position: fixed;
