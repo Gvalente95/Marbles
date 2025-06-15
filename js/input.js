@@ -76,7 +76,6 @@ function scaleDotWhilePressed() {
 	requestAnimationFrame(scaleDotWhilePressed);
 }
 
-
 addEventListener('touchstart', (event) => {
 	const touch = event.touches[0];
 	mouseX = touch.clientX;
@@ -98,7 +97,7 @@ addEventListener('touchmove', (event) => {
 	const touch = event.touches[0];
 	mouseX = touch.clientX;
 	mouseY = touch.clientY;
-
+	event.preventDefault();
 	if (!curBox) return;
 
 	let x1 = curBox.x;
