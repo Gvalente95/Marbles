@@ -77,6 +77,7 @@ function scaleDotWhilePressed() {
 }
 
 addEventListener('touchstart', (event) => {
+	event.preventDefault();
 	const touch = event.touches[0];
 	mouseX = touch.clientX;
 	mouseY = touch.clientY;
@@ -86,6 +87,7 @@ addEventListener('touchstart', (event) => {
 }, { passive: false });
 
 addEventListener('touchend', () => {
+	event.preventDefault();
 	mousePressed = false;
 	if (curBox) {
 		boxes.push(curBox);
@@ -94,10 +96,10 @@ addEventListener('touchend', () => {
 }, { passive: false });
 
 addEventListener('touchmove', (event) => {
+	event.preventDefault();
 	const touch = event.touches[0];
 	mouseX = touch.clientX;
 	mouseY = touch.clientY;
-
 	if (!curBox) return;
 
 	let x1 = curBox.x;
