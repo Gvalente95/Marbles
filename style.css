@@ -15,8 +15,15 @@
 }
 
 html, body {
-	touch-action: none;
+	margin: 0;
+	padding: 0;
+	height: 100%;
 	overflow: hidden;
+	touch-action: none;
+}
+
+* {
+	touch-action: none !important;
 }
 
 #controls {
