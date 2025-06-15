@@ -86,7 +86,7 @@ addEventListener('touchstart', (event) => {
 		curBox = init_box(mouseX, mouseY);
 }, { passive: false });
 
-addEventListener('touchend', () => {
+addEventListener('touchend', (event) => {
 	event.preventDefault();
 	mousePressed = false;
 	if (curBox) {
