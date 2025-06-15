@@ -76,7 +76,6 @@ function scaleDotWhilePressed() {
 	requestAnimationFrame(scaleDotWhilePressed);
 }
 
-
 addEventListener('touchstart', (event) => {
 	const touch = event.touches[0];
 	mouseX = touch.clientX;
