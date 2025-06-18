@@ -112,4 +112,5 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 
 window.onload = () => {
 	initUi();
+	update();
 };

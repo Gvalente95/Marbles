@@ -6,6 +6,8 @@
   <link rel="stylesheet" href="css/dot.css" />
   <link rel="stylesheet" href="css/ui.css" />
   <body>
+    <script src="js/audio.js"></script>
+    <script src="js/globals.js"></script>
     <script src="js/init.js"></script>
     <script src="js/input.js"></script>
     <script src="js/update_collisions.js"></script>
@@ -13,65 +15,9 @@
     <script src="js/update.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/tools.js"></script>
-    <script src="js/audio.js"></script>
     <div id="controls">
     </div>
     <script>
-      let au = new AudioManager();
-      let params = {
-        amount: 5,
-		rate: .05,
-		speed: 40000,
-        yGravity: 0.5,
-        xGravity: 0,
-        xDrag: 0.01,
-        yDrag: 0,
-        bounceFactor: 0.3,
-		stickStiff: .05,
-        minSize: 2,
-        maxSize: 50,
-        maxDots: 1000,
-        selfCollision: true,
-	  	darkMode: false,
-		musicMode: true,
-      };
-      let {
-        amount,
-		rate,
-		speed,
-        yGravity,
-        xGravity,
-        xDrag,
-        yDrag,
-        bounceFactor,
-		stickStiff,
-        minSize,
-        maxSize,
-        maxDots,
-        selfCollision,
-		darkMode,
-		musicMode,
-      } = params;
-
-	  let time = 0;
-      let dots = [];
-	  let dots_destroyed = [];
-      let boxes = [];
-	  let dropTime = 0;
-	  let curBox = null;
-      let keys = {};
-      let mousePressed = false;
-      let mouseX, mouseY;
-	  let mouseDX, mouseDY;
-      let timeClick = 0;
-	  let linkHeads = [];
-      let isGrowingDot = false;
-      let clickStartTime = 0;
-      let selDot = null;
-	  let selBox = null;
-	  let sel = null;
-	  let tpa = null, tpb = null;
-      update();
     </script>
   </body>
 </html>
