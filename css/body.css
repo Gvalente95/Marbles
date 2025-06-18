@@ -1,0 +1,16 @@
+body {
+	margin: 0;
+	overflow: hidden;
+	background-color: rgb(220, 209, 225);
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	touch-action: auto;
+}
+
+* {
+	touch-action: none !important;
+}

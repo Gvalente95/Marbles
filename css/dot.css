@@ -1,0 +1,36 @@
+@keyframes linkSpin {
+	from { transform: rotate(0deg) scale(1); }
+	to   { transform: rotate(360deg) scale(1.05); }
+}
+
+@keyframes linkGlow {
+	0%, 100% { box-shadow: 0 0 30px rgba(220, 46, 226, 0.6); }
+	50%      { box-shadow: 0 0 80px rgba(205, 197, 135, 0.732); }
+}
+
+.dot {
+	position: absolute;
+	background-color: red;
+	border-radius: 50%;
+	cursor: grab;
+	z-index: 1;
+	pointer-events: auto;
+}
+
+.dot.linked {
+	animation: linkSpin 4s linear infinite, linkGlow 2.5s ease-in-out infinite;
+}
+
+.dot:hover {
+	background-color: black;
+	cursor: grab;
+}
+
+.link-line {
+	position: absolute;
+	background: rgba(157, 77, 77, 0.647);
+	height: 2px;
+	transform-origin: left center;
+	pointer-events: none;
+	z-index: 10000;
+}

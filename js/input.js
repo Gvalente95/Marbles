@@ -5,34 +5,70 @@ addEventListener('mousedown', (event) => {
 	mouseX = event.clientX;
 	mouseY = event.clientY;
 	mousePressed = true;
-	if (keys["shift"] && !curBox)
-		curBox = init_box(mouseX, mouseY);
+	if (!selBox && keys["Shift"])
+		selBox = getBoxAtPos(mouseX, mouseY, 40);
+	if (!curBox && !selBox && keys["Shift"])
+		curBox = init_box(mouseX, mouseY, boxType);
+	if (!selBox && !curBox)
+	{
+		selDot = getDotAtPos(mouseX, mouseY);
+		if (selDot && selDot.linkLine)
+			setNewLinkHead(selDot);
+	}
+	dropTime = 0;
 });
 
 addEventListener('mouseup', (event) => {
 	mousePressed = false;
+	document.body.style.cursor = "default";
 	if (curBox)
 	{
 		boxes.push(curBox);
+		curBox.x = parseInt(curBox.style.left);
+		curBox.y = parseInt(curBox.style.top);
 		curBox = null;
+	}
+	if (selBox)
+		selBox = null;
+	if (selDot)
+	{
+		selDot.velocityX = mouseDX;
+		selDot.velocityY = mouseDY;
+		selDot = null;
 	}
 });
 
 addEventListener('mousemove', (event) => {
+	mouseDX = event.clientX - mouseX;
+	mouseDY = event.clientY - mouseY;
 	mouseX = event.clientX;
 	mouseY = event.clientY;
 
+	if (selBox)
+	{
+		document.body.style.cursor = "grab";
+		selBox.x += mouseDX;
+		selBox.y += mouseDY;
+		selBox.style.left = selBox.x + "px";
+		selBox.style.top = selBox.y + "px";
+	}
 	if (!curBox) return;
-
+	document.body.style.cursor = "move";
 	let x1 = curBox.x;
 	let y1 = curBox.y;
 	let x2 = mouseX;
 	let y2 = mouseY;
-
+	if (r_range(0, 10) == 0)
+		au.playBoxSound(null, curBox, minmax(0, 1, Math.abs(mouseDX + mouseDY) / 10));
 	const left = Math.min(x1, x2);
 	const top = Math.min(y1, y2);
-	const width = Math.abs(x2 - x1);
-	const height = Math.abs(y2 - y1);
+	let width = Math.abs(x2 - x1);
+	let height = Math.abs(y2 - y1);
+	if (curBox.className == "box_teleport" || curBox.className == "box_vortex")
+	{
+		if (width > height) height = width * (curBox.className == "box_vortex" ? r_range(.95, 1.05) : 1);
+		else width = height * (curBox.className == "box_vortex" ? r_range(.95, 1.05) : 1);
+	}
 	curBox.style.left = left + "px";
 	curBox.style.top = top + "px";
 	curBox.width = width;
@@ -42,39 +78,41 @@ addEventListener('mousemove', (event) => {
 });
 
 addEventListener('keydown', (e) => {
-	keys[e.key.toLowerCase()] = true;
-	if (e.code === 'Space')
-		init_selDot();
-	if (e.key == 'x')
+	keys[e.key] = true;
+	if (e.key === "x")
+	{
+		const dot = getDotAtPos(mouseX, mouseY, 80);
+		const box = getBoxAtPos(mouseX, mouseY, 20);
+		if (dot)
+			dots_destroyed.push(dot);
+		else if (box)
+		{
+			if (typeof box.onRemove === "function") box.onRemove();
+			boxes.splice(boxes.indexOf(box), 1);
+			box.remove();
+		}
+	}
+	else if (e.code === "Backspace")
 		deleteDots();
+	else if (e.key === "b")
+		deleteBoxes();
+	else if (e.key === "Tab")
+	{
+		e.preventDefault();
+		toggle_minimize_controls();
+	}
+	else if (e.key === "h") {
+		boxButtons[activeBoxIndex].style.backgroundColor = "rgba(0, 0, 0, 0.1)";
+		activeBoxIndex = (activeBoxIndex + (keys["shift"] ? -1 : 1) + boxButtons.length) % boxButtons.length;
+		boxButtons[activeBoxIndex].style.backgroundColor = "rgba(0, 255, 0, .8)";
+		boxType = boxButtons[activeBoxIndex].className;
+		au.playSound(au.click);
+	}
 });
 
 addEventListener('keyup', (e) => {
-	keys[e.key.toLowerCase()] = false;
-	if (e.code === 'Space')
-		isGrowingDot = false;
+	keys[e.key] = false;
 });
-
-function scaleDotWhilePressed() {
-	if (!selDot) return;
-	if (!isGrowingDot)
-	{
-		dots.push(selDot);
-		return;
-	}
-	const timeClick = performance.now() - clickStartTime;
-	const scaledSize = Math.max(5, Math.min(timeClick * 0.1, 500));
-	const prvSize = selDot.size;
-	const diffRadius = Math.abs(prvSize - scaledSize) / 2;
-	selDot.size = scaledSize;
-	selDot.x -= diffRadius;
-	selDot.y -= diffRadius;
-	selDot.style.left = selDot.x + "px";
-	selDot.style.top = selDot.y + "px";
-	selDot.style.width = scaledSize + "px";
-	selDot.style.height = scaledSize + "px";
-	requestAnimationFrame(scaleDotWhilePressed);
-}
 
 addEventListener('touchstart', (event) => {
 	const touch = event.touches[0];
@@ -116,3 +154,41 @@ addEventListener('touchmove', (event) => {
 	curBox.style.width = width + "px";
 	curBox.style.height = height + "px";
 }, { passive: false });
+
+window.addEventListener("wheel", (event) =>
+{
+	dots.forEach(dot =>
+	{
+		dot.velocityY += -event.deltaY * .005;
+		dot.velocityX += -event.deltaX * .005;
+	});	
+});
+
+let prevSpd;
+let prevGravX;
+let prevGravY;
+window.addEventListener("blur", () => {
+	prevSpd = speed;
+	speed = 0;
+	prevGravX = xGravity;
+	prevGravY = yGravity;
+	xGravity = 0;
+	yGravity = 0;
+});
+
+window.addEventListener("focus", () => {
+	setTimeout(() => {
+		speed = prevSpd;
+		xGravity = prevGravX;
+		yGravity = prevGravY;	
+	}, 50)
+	dots.forEach(d => {
+		d.velocityX = 0;
+		d.velocityY = 0;
+	});
+});
+
+window.addEventListener("gesturechange", (e) => {
+	console.log("Rotation:", e.rotation); // in degrees
+	console.log("Scale:", e.scale);
+});

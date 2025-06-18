@@ -1,200 +1,250 @@
-let time = 0;
-
-function updateBorderCollision(dot, newX, newY) {
-	const borderX = window.innerWidth;
-	const borderY = window.innerHeight;
-	const size = dot.size;
-
-	if (newX < 0) {
-		dot.hasTouchedBorder = true;
-		au.playMarbleSound(dot, Math.abs(dot.velocityX));
-		newX = 0;
-		dot.velocityX *= -1;
-	}
-	else if (newX > borderX - size) {
-		dot.hasTouchedBorder = true;
-		au.playMarbleSound(dot, Math.abs(dot.velocityX));
-		newX = borderX - size;
-		dot.velocityX *= -1;
-	}
-
-	if (newY > borderY - size) {
-		dot.hasTouchedBorder = true;
-		au.playMarbleSound(dot, Math.abs(dot.velocityY));
-		newY = borderY - size;
-		dot.velocityY *= -bounceFactor;
-		if (Math.abs(dot.velocityY) < 0.01) dot.velocityY = -0.5;
-	}
-	else if (newY < 0) {
-		dot.hasTouchedBorder = true;
-		au.playMarbleSound(dot, Math.abs(dot.velocityY));
-		newY = 0;
-		dot.velocityY *= -bounceFactor;
-	}
-	return [newX, newY];
-}
-
-function update_self_collisions(dot, newX, newY)
+function linkDots(dotA, dotB, enforce = false)
 {
-	const dots_amount = dots.length;
-	if (!selfCollision)
-		return;
-	for (let j = 0; j < dots_amount; j++) {
-		const other = dots[j];
-		if (other == dot) continue;
-		const dx = newX - other.x;
-		const dy = newY - other.y;
-		const distSq = dx * dx + dy * dy;
-		const minDist = (dot.size + other.size) / 2;
-		if (distSq < minDist * minDist)
-			resolveCollision(dot, other);
-	}
-}
-
-function update_box_collisions(dot, newX, newY)
-{
-	const boxes_amount = boxes.length;
-	if (!boxes_amount)
-		return;
-	for (let b = 0; b < boxes_amount; b++)
+	if (!enforce)
 	{
-		const box = boxes[b];
-		const radius = dot.size / 2;
-		const dotCenterX = newX + radius;
-		const dotCenterY = newY + radius;
-		const closestX = Math.max(box.x, Math.min(dotCenterX, box.x + box.width));
-		const closestY = Math.max(box.y, Math.min(dotCenterY, box.y + box.height));
-		const dx = dotCenterX - closestX;
-		const dy = dotCenterY - closestY;
-		const distSq = dx * dx + dy * dy;
-		if (distSq < radius * radius)
-			resolveBoxCollision(dot, box);
+		if (dotA.linkParent != null || !selDot || selDot == dotA)
+			return;
+		if (dotB != selDot && dotB.linkParent == null)
+			return;
+		if (dotB.linkChild && r_range(0, 1000))
+			return;
+		if (dotA.isLinkHead)
+			return;
 	}
+	if (dotA.linkLine && enforce)
+		deleteDotLinks(dotA);
+	au.playGelSound(dotA, 1);
+	dotA.linkParent = dotB;
+	dotB.linkChild = dotA;
+	dotA.offsetX = dotA.x - dotB.x;
+	dotA.offsetY = dotA.y - dotB.y;
+	const line = document.createElement("div");
+	line.className = "link-line";
+	if (r_range(0, 10) > 0)
+		line.style.backgroundColor = dotA.style.backgroundColor;
+	line.dotA = dotA;
+	line.dotB = dotB;
+	document.body.appendChild(line);
+	dotA.linkLine = line;
+	dotB.classList.add("linked");
+	if (dotB == selDot || enforce) {
+		dotB.isLinkHead = true;
+		dotB.linkHead = dotB;
+		linkHeads.push(dotB);
+		dotA.linkHead = dotB;
+	}
+	else
+		dotA.linkHead = dotB.linkHead;
+}
+
+
+function deleteDotLinks(dot)
+{
+	if (dot.linkChild) {
+		const child = dot.linkChild;
+		child.linkParent = null;
+		if (child.linkChild) {
+			child.isLinkHead = true;
+			if (child.linkLine) {
+				child.linkLine.remove();
+				child.linkLine = null;
+			}
+			linkHeads.push(child);
+			dot.linkChild = null;
+		}
+		else
+			deleteDotLinks(dot.linkChild);
+	}
+	if (dot.linkParent) {
+		const parent = dot.linkParent;
+		parent.linkChild = null;
+		if (!parent.linkParent && parent.isLinkHead) {
+			parent.isLinkHead = false;
+			deleteDotLinks(dot.linkParent);
+		}
+		else if (parent.linkLine) {
+			parent.linkLine.remove();
+			parent.linkLine = null;
+		}
+		dot.linkParent = null;
+	}
+	if (dot.linkLine)
+		dot.linkLine.remove();
+		dot.linkLine = null;
+	const idx = linkHeads.indexOf(dot);
+	if (idx !== -1) linkHeads.splice(idx, 1);
+	dot.linkChild = null;
+	dot.linkParent = null;
+	dot.isLinkHead = false;
+	dot.classList.remove("linked");
+}
+
+function updateLink(dot, linkParent = dot.linkParent) {
+	if (!dot.linkLine || !linkParent) return;
+
+	const x1 = dot.centerX;
+	const y1 = dot.centerY;
+	const x2 = linkParent.centerX;
+	const y2 = linkParent.centerY;
+	const dx = x2 - x1;
+	const dy = y2 - y1;
+	const length = Math.sqrt(dx * dx + dy * dy);
+	const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+	dot.linkLine.style.left = x1 + "px";
+	dot.linkLine.style.top = y1 + "px";
+	dot.linkLine.style.width = length + "px";
+	dot.linkLine.style.transform = `rotate(${angle}deg)`;
+	dot.velocityX += minmax(-10, 10, dx * stickStiff * (deltaTime * speed));
+	dot.velocityY += minmax(-10, 10, dy * stickStiff * (deltaTime * speed));
+	dot.velocityX *= .6;
+	dot.velocityY *= .6;
+	dot.style.left = dot.x + "px";
+	dot.style.top = dot.y + "px";
+}
+
+function setNewLinkHead(newhead)
+{
+	let node = newhead.linkChild;
+	while (node)
+	{
+		if (node.linkHead == newhead)
+			return;
+		const nextNode = node.linkChild;
+		linkDots(node, newhead, true);
+		node = nextNode;
+	}
+	node = newhead.linkParent;
+	while (node)
+	{
+		if (node.linkHead == newhead)
+			return;
+		const nextNode = node.linkParent;
+		linkDots(node, newhead, true);
+		node = nextNode;
+	}
+}
+
+function updateSelDot()
+{
+	selDot.x = mouseX - selDot.radius;
+	selDot.y = mouseY - selDot.radius;
+	selDot.style.left = selDot.x + "px";
+	selDot.style.top = selDot.y + "px";
+	selDot.centerX = selDot.x + selDot.radius;
+	selDot.centerY = selDot.y + selDot.radius;
+	selDot.velocityX = 0;
+	selDot.velocityY = 0;
 }
 
 function updateDots(dots) {
-	const dots_amount = dots.length;
-
-	for (let i = 0; i < dots_amount; i++) {
+	if (selDot)
+		updateSelDot();
+	for (let i = 0; i < dots.length; i++) {
 		const dot = dots[i];
-		let newX = dot.x + dot.velocityX;
-		let newY = dot.y + dot.velocityY;
-
+		dot.centerX = dot.x + dot.radius;
+		dot.centerY = dot.y + dot.radius;
+		if (dot == selDot)
+		{
+			if (dot.linkParent)
+				updateLink(dot);
+			continue;
+		}
+		if (dot.linkParent)
+		{
+			if (stickStiff <= 0 || !selfCollision)
+			{
+				if (dot.linkLine)
+					dot.linkLine.remove();
+				dot.linkParent = null;
+			}
+			if (stickStiff == 1)
+			{
+				dot.x = dot.linkParent.x + minmax(-5, 5, dot.offsetX);
+				dot.y = dot.linkParent.y + minmax(-5, 5, dot.offsetY);
+				dot.style.left = dot.x + "px";
+				dot.style.top = dot.y + "px";
+				continue;
+			}
+		}
+		// dot.velocityX += (keys["ArrowRight"] ? 1 : 0) - (keys["ArrowLeft"] ? 1 : 0);
+		// dot.velocityY += (keys["ArrowDown"] ? 1 : 0) - (keys["ArrowUp"] ? 1 : 0);
+		// dot.velocityX += keys["Space"] * 100;
+		dot.newX = dot.x + (dot.velocityX * dot.speed * (deltaTime * speed));
+		dot.newY = dot.y + (dot.velocityY * dot.speed * (deltaTime * speed));
+		dot.newCenterX = dot.x + dot.radius;
+		dot.newCenterY = dot.y + dot.radius;
 		dot.lifeTime = time - dot.startTime;
-		dot.velocityY += yGravity;
-		dot.velocityX += xGravity;
-		dot.velocityX *= 1 - xDrag;
-		dot.velocityY *= 1 - yDrag;
-		let newP = updateBorderCollision(dot, newX, newY);
-		newX = newP[0], newY = newP[1];
-		update_self_collisions(dot, newX, newY);
-		dot.x = newX;
-		dot.y = newY;
-		update_box_collisions(dot, newX, newY);
-		dot.style.left = newX + "px";
-		dot.style.top = newY + "px";
+		if (dot.isLinkHead) {
+			const baseAngle = Math.atan2(dot.velocityY, dot.velocityX);
+			const timeFactor = time * 0.001;
+			const wave = Math.sin(timeFactor + dot.id * 2) * 0.05; // Amplitude réduite
+			const wiggle = (Math.random() - 0.5) * 0.01;
+			dot.angle = baseAngle + wave + wiggle;
+			const speed = Math.sqrt(dot.velocityX ** 2 + dot.velocityY ** 2) || 0.5;
+			dot.velocityX = Math.cos(dot.angle) * speed;
+			dot.velocityY = Math.sin(dot.angle) * speed;
+			if (selDot && selDot == dot.linkParent)
+			{
+				dot.velocityX += mouseDX * .01;
+				dot.velocityY += mouseDY *.01;
+			}
+			const margin = 80;
+			const repelStrength = 1;
+			if (dot.newX < margin)
+				dot.velocityX += repelStrength * (1 - dot.x / margin);
+			else if (dot.newX > window.innerWidth - margin)
+				dot.velocityX -= repelStrength * (1 - (window.innerWidth - dot.x) / margin);
+			if (dot.newY < margin)
+				dot.velocityY += repelStrength * (1 - dot.y / margin);
+			else if (dot.newY > window.innerHeight - margin)
+				dot.velocityY -= repelStrength * (1 - (window.innerHeight - dot.y) / margin);
+		}
+		else
+		{
+			dot.velocityY += yGravity * (deltaTime * speed);
+			dot.velocityX += xGravity * (deltaTime * speed);
+		}
+		dot.velocityX *= 1 - xDrag * (deltaTime * speed);
+		dot.velocityY *= 1 - yDrag * (deltaTime * speed);
+		if (Math.abs(dot.velocityX) < 0.01) dot.velocityX = 0;
+		if (Math.abs(dot.velocityY) < 0.01) dot.velocityY = 0;
+		updateBorderCollision(dot);
+		update_self_collisions(dot, i);
+		update_box_collisions(dot);
+		dot.x = dot.newX;
+		dot.y = dot.newY;
+		dot.style.left = dot.x + "px";
+		dot.style.top = dot.y + "px";
+		if (dot.linkParent)
+			updateLink(dot, dot.linkParent);
 	}
+	dots_destroyed.forEach(d => {
+		if (typeof d.onRemove === "function") d.onRemove();
+		d.remove();
+		dots.splice(dots.indexOf(d), 1);
+	});
+	dots_destroyed = [];
 }
 
-function resolveBoxCollision(dot, box)
-{
-	const borderX = box.x;
-	const borderY = box.y;
-	const endX = box.x + box.width;
-	const endY = box.y + box.height;
-	const size = dot.size;
-
-	if (dot.x + size < borderX || dot.x > endX || dot.y + size < borderY || dot.y > endY) {
-		return;
-	}
-	const xDist = Math.abs(dot.x + size - borderX);
-	const yDist = Math.abs(dot.y + size - borderY);
-	if (xDist < yDist)
-	{
-		dot.x = dot.x < borderX + box.width / 2 ? borderX - size : endX;
-		dot.hasTouchedBorder = true;
-		au.playMarbleSound(dot, Math.abs(dot.velocityX));
-		dot.velocityX *= -1;
-		return;
-	}
-	if (yDist < xDist)
-	{
-		dot.y = dot.y < borderY + box.height / 2 ? borderY - size : endY;
-		dot.hasTouchedBorder = true;
-		au.playMarbleSound(dot, Math.abs(dot.velocityY));
-		dot.velocityY *= -1;
-	}
-}
-
-function resolveCollision(dotA, dotB) {
-	const xDist = dotB.x - dotA.x;
-	const yDist = dotB.y - dotA.y;
-	const dist = Math.sqrt(xDist * xDist + yDist * yDist);
-	const minDist = (dotA.size + dotB.size) / 2;
-
-	if (dist === 0 || dist >= minDist) return;
-
-	const overlap = minDist - dist;
-	const dx = xDist / dist;
-	const dy = yDist / dist;
-
-	const totalMass = dotA.mass + dotB.mass;
-	const pushA = (dotB.mass / totalMass) * overlap;
-	const pushB = (dotA.mass / totalMass) * overlap;
-
-	dotA.x -= dx * pushA;
-	dotA.y -= dy * pushA;
-	dotB.x += dx * pushB;
-	dotB.y += dy * pushB;
-
-	// Only resolve if moving toward each other
-	const xVelocityDiff = dotA.velocityX - dotB.velocityX;
-	const yVelocityDiff = dotA.velocityY - dotB.velocityY;
-
-	if (xVelocityDiff * dx + yVelocityDiff * dy >= 0) {
-		const angle = -Math.atan2(yDist, xDist);
-
-		const u1 = rotate({ x: dotA.velocityX, y: dotA.velocityY }, angle);
-		const u2 = rotate({ x: dotB.velocityX, y: dotB.velocityY }, angle);
-
-		const m1 = dotA.mass;
-		const m2 = dotB.mass;
-
-		const v1 = {
-			x: (u1.x * (m1 - m2) + 2 * m2 * u2.x) / (m1 + m2),
-			y: u1.y
-		};
-		const v2 = {
-			x: (u2.x * (m2 - m1) + 2 * m1 * u1.x) / (m1 + m2),
-			y: u2.y
-		};
-
-		const vFinal1 = rotate(v1, -angle);
-		const vFinal2 = rotate(v2, -angle);
-		dotA.velocityX = vFinal1.x;
-		dotA.velocityY = vFinal1.y;
-		dotB.velocityX = vFinal2.x;
-		dotB.velocityY = vFinal2.y;
-		au.playMarbleSound(dotA, Math.abs(vFinal1.x) + Math.abs(vFinal1.y));
-	}
-}
-
-function rotate(velocity, angle) {
-	return {
-		x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
-		y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
-	};
-}
-
+let lastTime = performance.now();
 function update()
 {
 	time = Date.now();
+	const now = performance.now() / 1000;
+	deltaTime = (now - lastTime) / 1000;
+	lastTime = now;
 	updateDots(dots);
 	requestAnimationFrame(update);
-	if (mousePressed && !curBox) {
+	if (now - dropTime > rate && mousePressed && !isDraggingControls && !curBox && !selBox && !selDot) {
 		initDots(dots, mouseX, mouseY);
+		dropTime = now;
 	}
 	au.update();
-	document.getElementById("amount").textContent = dots.length;
-	document.getElementById("maxDots").textContent = maxDots;
+	const ctrl_header = document.getElementById("controlsHeader")
+	if (ctrl_header)
+		ctrl_header.textContent = "CONTROLS";
+	const ctrl = document.getElementById("controllLabel");
+	if (ctrl)
+		ctrl.textContent = "Dots: " + dots.length + "/ " + maxDots + " auQueue: " + au.audioQueue.length;
 }
