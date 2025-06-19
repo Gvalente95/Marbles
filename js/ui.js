@@ -282,14 +282,14 @@ function initSliders(contentWrapper)
 let activeBoxIndex = 1;
 let boxType = "box_gelatine";
 let	boxButtons = [];
-function initButtons(contentWrapper)
+function initButtons(contentWrapper, controls)
 {
 	contentWrapper.appendChild(createButton({
 		labelText: "Reset",
 		id: "ResetButton",
 		value: null,
 		onChange: (v) => reset(),
-		keyBind: "r",
+		keyBind: "R",
 	}));
 
 	contentWrapper.appendChild(createButton({
@@ -297,7 +297,7 @@ function initButtons(contentWrapper)
 		id: "SwitchAuButton",
 		value: au.active,
 		onChange: (v) => au.active = !au.active,
-		keyBind: "a",
+		keyBind: "A",
 	}));
 
 	contentWrapper.appendChild(createButton({
@@ -305,7 +305,7 @@ function initButtons(contentWrapper)
 		id: "SelfCollisionsButton",
 		value: selfCollision,
 		onChange: (v) => selfCollision = !selfCollision,
-		keyBind: "c",
+		keyBind: "C",
 	}));
 
 	contentWrapper.appendChild(createButton({
@@ -313,7 +313,7 @@ function initButtons(contentWrapper)
 		id: "DarkModeButton",
 		value: darkMode,
 		onChange: (v) => switchDarkMode(),
-		keyBind: "d",
+		keyBind: "D",
 	}));
 
 	contentWrapper.appendChild(createButton({
@@ -321,34 +321,23 @@ function initButtons(contentWrapper)
 		id: "MusicModeButton",
 		value: musicMode,
 		onChange: (v) => musicMode = !musicMode,
-		keyBind: "m",
+		keyBind: "M",
 	}));
-	const boxNames = ["Concrete", "Gelatine", "Magnetite", "Vortex", "Teleport"];
+	const boxNames = ["Concrete", "Gelatine", "Magnetite", "Vortex", "Teleport", "None"];
 
-	const ctrl_width = 400 / 5;
-	for (let i = 0; i < 5; i++) {
+	const ctrl_width = 65;
+	for (let i = 0; i < 6; i++) {
 		const boxButton = document.createElement("div");
 		const typeClass = "box_" + boxNames[i].toLowerCase();
 		boxButton.className = typeClass;
+		boxButton.classList.add("boxButton");
 		boxButton.textContent = boxNames[i];
-		boxButton.style.cursor = "pointer";
-		boxButton.style.padding = "6px";
-		boxButton.style.margin = "4px 0";
-		boxButton.style.textAlign = "center";
 		boxButton.style.backgroundColor = i == 1 ? "rgba(0, 255, 0, .8)" : "rgba(0, 0, 0, 0.1)";
-		boxButton.style.borderRadius = "4px";
 		boxButton.style.width = ctrl_width;
-		boxButton.style.color = "white";
 		boxButton.style.left = (10 + i * ctrl_width) + "px";
-		boxButton.style.top = "99%";
-		boxButton.style.animation = "none";
-		boxButton.style.userSelect = "none";
-		boxButton.style.transition = "background-color 0.2s";
-		boxButton.onclick = () => {
-			switchBoxButton(boxButton, i, typeClass);
-		};
-		boxButtons.push(boxButton); // Keep a reference
-		contentWrapper.appendChild(boxButton);
+		boxButton.onclick = () => {switchBoxButton(boxButton, i, typeClass);};
+		boxButtons.push(boxButton);
+		controls.appendChild(boxButton);
 	}
 }
 
@@ -377,8 +366,9 @@ function initUi()
 	const label = document.createElement("div");
 	label.id = "controllLabel";
 	contentWrapper.appendChild(label);
+	contentWrapper.style.userSelect = "none";
 	initSliders(contentWrapper);
-	initButtons(contentWrapper);
+	initButtons(contentWrapper, controls);
 	[...controls.querySelectorAll("label, span, button")].forEach(el => el.style.color = "black");
 	switchDarkMode(true);
 }
@@ -415,4 +405,84 @@ function toggle_minimize_controls(newMinimize = !minimize) {
 	minimize = newMinimize;
 	controls.classList.toggle("minimized", minimize);
 	au.playGelSound();
+}
+
+
+let isResizing = false;
+function addResizer(element, horDir, verDir) {
+	const resizer = document.createElement("div");
+	resizer.className = "resizer";
+	resizer.style.position = "absolute";
+	resizer.style.width = horDir && !verDir ? "10px" : "15px";
+	resizer.style.height = verDir && !horDir ? "10px" : "15px";
+	resizer.style.cursor =
+		(horDir === "left" || horDir === "right" ? "ew-resize" : "") +
+		(verDir === "top" || verDir === "bottom" ? (horDir ? "-" : "") + "ns-resize" : "");
+	if (horDir === "left") resizer.style.left = "0";
+	if (horDir === "right") resizer.style.right = "0";
+	if (verDir === "top") resizer.style.top = "0";
+	if (verDir === "bottom") resizer.style.bottom = "0";
+
+	element.appendChild(resizer);
+
+	const startResize = (startX, startY) => {
+		const startWidth = element.offsetWidth;
+		const startHeight = element.offsetHeight;
+		const startLeft = element.offsetLeft;
+		const startTop = element.offsetTop;
+		isResizing = true;
+		const onMove = (e) => {
+			const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+			const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+			if (horDir === "right") {
+				element.width = Math.max(20, startWidth + (clientX - startX));
+				element.style.width = element.width + "px";
+			} else if (horDir === "left") {
+				element.x = startLeft + (clientX - startX);
+				element.width = Math.max(20, startWidth - (clientX - startX));
+				element.style.width = element.width + "px";
+				element.style.left = element.x + "px";
+			}
+
+			if (verDir === "bottom") {
+				element.height = Math.max(20, startHeight + (clientY - startY));
+				element.style.height = element.height + "px";
+			} else if (verDir === "top") {
+				element.y = startTop + (clientY - startY);
+				element.height = Math.max(20, startHeight - (clientY - startY));
+				element.style.height = element.height + "px";
+				element.style.top = element.y + "px";
+			}
+		};
+
+		const stopResize = () => {
+			isResizing = false;
+			document.removeEventListener("mousemove", onMove);
+			document.removeEventListener("mouseup", stopResize);
+			document.removeEventListener("touchmove", onMove);
+			document.removeEventListener("touchend", stopResize);
+		};
+
+		document.addEventListener("mousemove", onMove);
+		document.addEventListener("mouseup", stopResize);
+		document.addEventListener("touchmove", onMove);
+		document.addEventListener("touchend", stopResize);
+	};
+
+	resizer.addEventListener("mousedown", (e) => {
+		e.preventDefault();
+		startResize(e.clientX, e.clientY);
+	});
+	resizer.addEventListener("touchstart", (e) => {
+		e.preventDefault();
+		startResize(e.touches[0].clientX, e.touches[0].clientY);
+	}, { passive: false });
+}
+
+function addResizers(element)
+{
+	addResizer(element, "left", "top");
+	addResizer(element, "left", "bottom");
+	addResizer(element, "right", "top");
+	addResizer(element, "right", "bottom");
 }

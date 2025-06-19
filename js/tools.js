@@ -9,12 +9,9 @@ function deleteDots()
 	dots = [];
 }
 
-function deleteBoxes()
-{
-	for (const box of boxes)
-	{
+function deleteBoxes() {
+	for (const box of boxes) {
 		if (typeof box.onRemove === "function") box.onRemove();
-		boxes.splice(boxes.indexOf(box), 1);
 		box.remove();
 	}
 	boxes = [];
@@ -66,8 +63,10 @@ function createGelRipple(box, x, y, radius = 20, dur = .5, color = "rgba(60, 141
 
 function getBoxAtPos(x, y, radius = 20)
 {
-	for (const b of boxes)
+	const len = boxes.length;
+	for (let i = len; i > 0; i--)
 	{
+		const b = boxes[i];
 		if (boxesOverlap(b.x, b.y, b.width, b.height, x, y, radius, radius))
 			return b;
 	}

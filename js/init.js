@@ -90,6 +90,7 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 	box.height = height;
 	box.active = false;
 	box.style.display = "block";
+	box.style.cursor = "grab";
 	box.style.width = width + "px";
 	box.style.height = height + "px";
 	if (type == "box_teleport") {
@@ -107,6 +108,22 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 		else if (box === tpb) tpb = null;
 	};
 	document.body.appendChild(box);
+	if (box.className == "box_vortex")
+	{
+		const circle = document.createElement("div");
+		circle.className = "dot";
+		circle.style.x = 10 + "px";
+		circle.style.y = 10 + "px";
+		box.appendChild(circle);
+	}
+	else
+		addResizers(box);
+	box.addEventListener("mousedown", (e) => {
+		if (selBox || selDot || isResizing)
+			return;
+		e.preventDefault();
+		selBox = box;
+	});
 	return box;
 }
 

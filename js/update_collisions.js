@@ -38,17 +38,18 @@ function concretizeDot(dot, box)
 	const db = Math.abs(dot.centerY - (box.y + box.height));
 	const md = Math.min(dl, dr, dt, db);
 	let sides = [];
+	let isImpact = false;
 	if (Math.abs(dl - md) < .1) sides.push("left");
 	if (Math.abs(dr - md) < .1) sides.push("right");
 	if (Math.abs(dt - md) < .1) sides.push("top");
 	if (Math.abs(db - md) < .1) sides.push("bottom");
-	au.playMarbleSound(dot, Math.abs(dot.velocityX) + Math.abs(dot.velocityY));
 	if (sides.includes("left") || sides.includes("right")) {
 		dot.velocityX *= -bounceFactor;
 		if (sides.includes("left") && dot.newX + dot.size > box.x)
 			dot.newX = box.x - dot.size;
 		if (sides.includes("right") && dot.newX < box.x + box.width)
 			dot.newX = box.x + box.width;
+		isImpact = Math.abs(dot.velocityX);
 	}
 	if (sides.includes("top") || sides.includes("bottom")) {
 		dot.velocityY *= -bounceFactor;
@@ -56,6 +57,12 @@ function concretizeDot(dot, box)
 			dot.newY = box.y - dot.size;
 		if (sides.includes("bottom") && dot.newY < box.y + box.height)
 			dot.newY = box.y + box.height;
+		isImpact = Math.abs(dot.velocityY);
+	}
+	if (isImpact > 1)
+	{
+		au.playBoxSound(dot, box);
+		au.playMarbleSound(dot, Math.abs(dot.velocityX) + Math.abs(dot.velocityY));
 	}
 }
 
@@ -71,6 +78,11 @@ function teleportDot(dot, boxA, boxB, boxACenterX, boxACenterY)
 	dot.style.top = dot.y + "px";
 	dot.velocityX *= .5;
 	dot.velocityY *= .5;
+	if (dot.linkLine)
+	{
+		dot.offsetX = dot.newX - dot.linkParent.x;
+		dot.offsetY = dot.newY - dot.linkParent.x;
+	}
 	return true;
 }
 
@@ -147,6 +159,8 @@ function update_box_collisions(dot)
 }
 
 function resolveSelfCollision(dotA, dotB) {
+	if (dotB.isLinkHead)
+		return;
 	let xDist = dotB.x - dotA.x;
 	let yDist = dotB.y - dotA.y;
 	let dist = Math.sqrt(xDist * xDist + yDist * yDist);

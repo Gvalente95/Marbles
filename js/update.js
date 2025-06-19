@@ -58,7 +58,7 @@ function deleteDotLinks(dot)
 	if (dot.linkParent) {
 		const parent = dot.linkParent;
 		parent.linkChild = null;
-		if (!parent.linkParent && parent.isLinkHead) {
+		if (!parent.linkParent) {
 			parent.isLinkHead = false;
 			deleteDotLinks(dot.linkParent);
 		}
@@ -127,8 +127,17 @@ function setNewLinkHead(newhead)
 
 function updateSelDot()
 {
-	selDot.x = mouseX - selDot.radius;
-	selDot.y = mouseY - selDot.radius;
+	if (selDot.inGel)
+	{
+		console.warn("YOPPP");	
+		selDot.x += (mouseX - (selDot.x - selDot.radius)) * .1;
+		selDot.y += (mouseY - (selDot.y - selDot.radius)) * .1;
+	}
+	else
+	{
+		selDot.x = mouseX - selDot.radius;
+		selDot.y = mouseY - selDot.radius;
+	}
 	selDot.style.left = selDot.x + "px";
 	selDot.style.top = selDot.y + "px";
 	selDot.centerX = selDot.x + selDot.radius;
@@ -144,6 +153,8 @@ function updateDots(dots) {
 		const dot = dots[i];
 		dot.centerX = dot.x + dot.radius;
 		dot.centerY = dot.y + dot.radius;
+		if (!dot.linkChild && !dot.linkParent && dot.linkLine)
+			deleteDotLinks(dot);
 		if (dot == selDot)
 		{
 			if (dot.linkParent)
@@ -167,9 +178,6 @@ function updateDots(dots) {
 				continue;
 			}
 		}
-		// dot.velocityX += (keys["ArrowRight"] ? 1 : 0) - (keys["ArrowLeft"] ? 1 : 0);
-		// dot.velocityY += (keys["ArrowDown"] ? 1 : 0) - (keys["ArrowUp"] ? 1 : 0);
-		// dot.velocityX += keys["Space"] * 100;
 		dot.newX = dot.x + (dot.velocityX * dot.speed * (deltaTime * speed));
 		dot.newY = dot.y + (dot.velocityY * dot.speed * (deltaTime * speed));
 		dot.newCenterX = dot.x + dot.radius;
@@ -236,7 +244,7 @@ function update()
 	lastTime = now;
 	updateDots(dots);
 	requestAnimationFrame(update);
-	if (now - dropTime > rate && mousePressed && !isDraggingControls && !curBox && !selBox && !selDot) {
+	if (now - dropTime > rate && (keys[" "] || (mousePressed && (keys["Shift"] || boxType == "box_none"))) && !isDraggingControls && !curBox && !selBox && !selDot) {
 		initDots(dots, mouseX, mouseY);
 		dropTime = now;
 	}

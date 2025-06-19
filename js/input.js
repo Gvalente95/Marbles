@@ -1,19 +1,34 @@
 addEventListener('mousedown', (event) => {
-	if (event.target.tagName === 'INPUT' ||
-		event.target.tagName === 'BUTTON' ||
-		event.target.closest('.ui')) return;
 	mouseX = event.clientX;
 	mouseY = event.clientY;
+	if (event.target.tagName === 'INPUT' ||
+		event.target.tagName === 'BUTTON' ||
+		event.target.closest('.control-content')) return;
 	mousePressed = true;
-	if (!selBox && keys["Shift"])
-		selBox = getBoxAtPos(mouseX, mouseY, 40);
-	if (!curBox && !selBox && keys["Shift"])
-		curBox = init_box(mouseX, mouseY, boxType);
+	if (isDraggingControls || isResizing)
+		return;
 	if (!selBox && !curBox)
 	{
 		selDot = getDotAtPos(mouseX, mouseY);
 		if (selDot && selDot.linkLine)
 			setNewLinkHead(selDot);
+	}
+	if (!curBox && !selBox && !selDot)
+	{
+		if (boxType == "box_teleport" && (tpa || tpb))
+		{
+			if (tpa && tpb)
+			{
+				initDots(dots, mouseX, mouseY);
+				return;
+			}
+			const other = tpa ? tpa : tpb;
+			curBox = init_box(mouseX, mouseY, other.width, other.height);
+			boxes.push(curBox);
+			curBox = null;
+		}
+		else if (boxType != "box_none")
+			curBox = init_box(mouseX, mouseY);
 	}
 	dropTime = 0;
 });
@@ -23,9 +38,18 @@ addEventListener('mouseup', (event) => {
 	document.body.style.cursor = "default";
 	if (curBox)
 	{
-		boxes.push(curBox);
-		curBox.x = parseInt(curBox.style.left);
-		curBox.y = parseInt(curBox.style.top);
+		if (curBox.width < 10 || curBox.height < 10)
+		{
+			curBox.onRemove();
+			curBox.remove();
+			initDots(dots, mouseX, mouseY);
+		}
+		else
+		{
+			boxes.push(curBox);
+			curBox.x = parseInt(curBox.style.left);
+			curBox.y = parseInt(curBox.style.top);	
+		}
 		curBox = null;
 	}
 	if (selBox)
@@ -64,10 +88,10 @@ addEventListener('mousemove', (event) => {
 	const top = Math.min(y1, y2);
 	let width = Math.abs(x2 - x1);
 	let height = Math.abs(y2 - y1);
-	if (curBox.className == "box_teleport" || curBox.className == "box_vortex")
+	if (curBox.className == "box_vortex")
 	{
-		if (width > height) height = width * (curBox.className == "box_vortex" ? r_range(.95, 1.05) : 1);
-		else width = height * (curBox.className == "box_vortex" ? r_range(.95, 1.05) : 1);
+		if (width > height) height = width * r_range(.95, 1.05);
+		else width = height * r_range(.95, 1.05);
 	}
 	curBox.style.left = left + "px";
 	curBox.style.top = top + "px";
@@ -79,7 +103,7 @@ addEventListener('mousemove', (event) => {
 
 addEventListener('keydown', (e) => {
 	keys[e.key] = true;
-	if (e.key === "x")
+	if (e.key === "Backspace")
 	{
 		const dot = getDotAtPos(mouseX, mouseY, 80);
 		const box = getBoxAtPos(mouseX, mouseY, 20);
@@ -92,7 +116,7 @@ addEventListener('keydown', (e) => {
 			box.remove();
 		}
 	}
-	else if (e.code === "Backspace")
+	else if (e.code === "x")
 		deleteDots();
 	else if (e.key === "b")
 		deleteBoxes();
@@ -101,7 +125,7 @@ addEventListener('keydown', (e) => {
 		e.preventDefault();
 		toggle_minimize_controls();
 	}
-	else if (e.key === "h") {
+	else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
 		boxButtons[activeBoxIndex].style.backgroundColor = "rgba(0, 0, 0, 0.1)";
 		activeBoxIndex = (activeBoxIndex + (keys["shift"] ? -1 : 1) + boxButtons.length) % boxButtons.length;
 		boxButtons[activeBoxIndex].style.backgroundColor = "rgba(0, 255, 0, .8)";
