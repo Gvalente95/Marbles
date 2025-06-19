@@ -21,3 +21,7 @@ function rotate(velocity, angle) {
 		y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
 	};
 }
+
+function getRevAngle(angle) {
+	return (angle + Math.PI) % (2 * Math.PI);
+}

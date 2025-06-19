@@ -7,13 +7,15 @@ addEventListener('mousedown', (event) => {
 	mousePressed = true;
 	if (isDraggingControls || isResizing)
 		return;
-	if (!selBox && !curBox)
+	if (!curShape && keys["Shift"])
+		curShape = initShape(mouseX, mouseY);
+	if (!selBox && !curBox && !curShape)
 	{
-		selDot = getDotAtPos(mouseX, mouseY);
-		if (selDot && selDot.linkLine)
-			setNewLinkHead(selDot);
+		selDot = getDotAtPos(mouseX, mouseY, 100);
+		// if (selDot && selDot.linkLine && !selDot.shape)
+		// 	setNewLinkHead(selDot);
 	}
-	if (!curBox && !selBox && !selDot)
+	if (!curBox && !selBox && !selDot && !curShape)
 	{
 		if (boxType == "box_teleport" && (tpa || tpb))
 		{
@@ -36,6 +38,11 @@ addEventListener('mousedown', (event) => {
 addEventListener('mouseup', (event) => {
 	mousePressed = false;
 	document.body.style.cursor = "default";
+	if (curShape)
+	{
+		curShape.last = curShape.dots[curShape.dots.length - 1];
+		curShape = null;
+	}
 	if (curBox)
 	{
 		if (curBox.width < 10 || curBox.height < 10)
@@ -76,30 +83,37 @@ addEventListener('mousemove', (event) => {
 		selBox.style.left = selBox.x + "px";
 		selBox.style.top = selBox.y + "px";
 	}
-	if (!curBox) return;
-	document.body.style.cursor = "move";
-	let x1 = curBox.x;
-	let y1 = curBox.y;
-	let x2 = mouseX;
-	let y2 = mouseY;
-	if (r_range(0, 10) == 0)
-		au.playBoxSound(null, curBox, minmax(0, 1, Math.abs(mouseDX + mouseDY) / 10));
-	const left = Math.min(x1, x2);
-	const top = Math.min(y1, y2);
-	let width = Math.abs(x2 - x1);
-	let height = Math.abs(y2 - y1);
-	if (curBox.className == "box_vortex")
+	if (curBox)
 	{
-		if (width > height) height = width * r_range(.95, 1.05);
-		else width = height * r_range(.95, 1.05);
+		document.body.style.cursor = "move";
+		let x1 = curBox.x;
+		let y1 = curBox.y;
+		let x2 = mouseX;
+		let y2 = mouseY;
+		if (r_range(0, 10) == 0)
+			au.playBoxSound(null, curBox, minmax(0, 1, Math.abs(mouseDX + mouseDY) / 10));
+		const left = Math.min(x1, x2);
+		const top = Math.min(y1, y2);
+		let width = Math.abs(x2 - x1);
+		let height = Math.abs(y2 - y1);
+		if (curBox.className == "box_vortex")
+		{
+			if (width > height) height = width * r_range(.95, 1.05);
+			else width = height * r_range(.95, 1.05);
+		}
+		curBox.style.left = left + "px";
+		curBox.style.top = top + "px";
+		curBox.width = width;
+		curBox.height = height;
+		curBox.style.width = width + "px";
+		curBox.style.height = height + "px";
 	}
-	curBox.style.left = left + "px";
-	curBox.style.top = top + "px";
-	curBox.width = width;
-	curBox.height = height;
-	curBox.style.width = width + "px";
-	curBox.style.height = height + "px";
 });
+
+function deleteDot(dot)
+{
+	dots_destroyed.push(dot);
+}
 
 addEventListener('keydown', (e) => {
 	keys[e.key] = true;
@@ -108,7 +122,7 @@ addEventListener('keydown', (e) => {
 		const dot = getDotAtPos(mouseX, mouseY, 80);
 		const box = getBoxAtPos(mouseX, mouseY, 20);
 		if (dot)
-			dots_destroyed.push(dot);
+			deleteDot(dot);
 		else if (box)
 		{
 			if (typeof box.onRemove === "function") box.onRemove();
@@ -116,7 +130,7 @@ addEventListener('keydown', (e) => {
 			box.remove();
 		}
 	}
-	else if (e.code === "x")
+	else if (e.key === "x")
 		deleteDots();
 	else if (e.key === "b")
 		deleteBoxes();

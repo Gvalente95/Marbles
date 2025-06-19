@@ -73,14 +73,14 @@ function getBoxAtPos(x, y, radius = 20)
 	return null;
 }
 
-function getDotAtPos(x, y, radius = 20) {
+function getDotAtPos(x, y, radius = 20, list = dots, shape_index = 0) {
 	const sd = selDot;
 	if (sd && boxesOverlap(sd.x, sd.y, sd.size, sd.size, x, y, radius * 10, radius * 10))
 		return selDot;
 	let closest = null;
 	let closestDiff = Infinity;
-	for (let i = 0; i < dots.length; i++) {
-		const d = dots[i];
+	for (let i = 0; i < list.length; i++) {
+		const d = list[i];
 		if (!boxesOverlap(d.x, d.y, d.size, d.size, x, y, radius, radius))
 			continue;
 		let diff = Math.abs(x - d.x) + Math.abs(y - d.y);
@@ -89,5 +89,7 @@ function getDotAtPos(x, y, radius = 20) {
 		closestDiff = diff;
 		closest = d;
 	}
+	if (!closest && shapes && shapes[shape_index])
+		return getDotAtPos(x, y, radius, shapes[shape_index].dots, shape_index + 1);
 	return closest;
 }

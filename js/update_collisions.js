@@ -25,9 +25,15 @@ function absorbDot(dot, box)
 	dot.velocityY *= friction;
 }
 
-function magnetizeDot(dot, box)
+function breakDot(dot, box)
 {
-	
+	const marge = 50;
+	const revAngle = getRevAngle(dot.angle);
+	const dotX = minmax(marge, window.innerWidth - marge, dot.x);
+	const dotY = minmax(marge, window.innerHeight - marge, dot.y);
+	const newDot = getDot(dotX, dotY, dot.size / 2, revAngle);
+	deleteDot(dot);
+	dots.push(newDot);
 }
 
 function concretizeDot(dot, box)
@@ -98,8 +104,8 @@ function orbitDot(dot, box, boxCenterX, boxCenterY)
 	const boxArea = box.width * box.height;
 	const maxBoxArea = (window.innerWidth / 2) * (window.innerHeight / 2);
 	const boxNorm = boxArea / maxBoxArea;
-	const attractSpeed = lerp(1, 5, boxNorm) * lerp(0.5, 2, massNorm);
-	const orbitSpeed = lerp(1.5, 0.4, boxNorm) * lerp(2, 0.7, massNorm);
+	const attractSpeed = lerp(1, 5, boxNorm) * lerp(0.1, .8, massNorm);
+	const orbitSpeed = lerp(1.5, 0.4, boxNorm) * lerp(1, 0.3, massNorm);
 	dot.velocityX += dirX * attractSpeed * deltaTime * speed;
 	dot.velocityY += dirY * attractSpeed * deltaTime * speed;
 	dot.velocityX += tangentX * orbitSpeed * deltaTime * speed;
@@ -122,15 +128,10 @@ function resolveBoxCollision(dot, box)
 		return teleportDot(dot, tpb, tpa, tpb.x + tpb.width / 2, tpb.y + tpb.height / 2);
 	switch (box.className)
 	{
-		case "box_gelatine":
-			absorbDot(dot, box);
-			break;
-		case "box_concrete":
-			concretizeDot(dot, box);
-			break;
+		case "box_gelatine": absorbDot(dot, box); break;
+		case "box_concrete": concretizeDot(dot, box); break;
 		case "box_vortex": orbitDot(dot, box, boxCenterX, boxCenterY);  break;
-		case "box_magnetite":
-			break;
+		case "box_magnetite": breakDot(dot, box); break;
 	}
 	return true;
 }
@@ -215,14 +216,14 @@ function resolveSelfCollision(dotA, dotB) {
 	}
 }
 
-function update_self_collisions(dot, i)
+function update_self_collisions(dot, i, list = dots, shapeIndex = 0)
 {
 	if (!selfCollision)
 		return;
-	if (dot.isLinkHead)
-		return;
-	for (let j = i + 1; j < dots.length; j++) {
-		const other = dots[j];
+	// if (dot.isLinkHead)
+	// 	return;
+	for (let j = i + 1; j < list.length; j++) {
+		const other = list[j];
 		if (other == dot) continue;
 		const dx = dot.newX - other.x;
 		const dy = dot.newY - other.y;
@@ -231,6 +232,8 @@ function update_self_collisions(dot, i)
 		if (distSq < minDist * minDist)
 			resolveSelfCollision(dot, other);
 	}
+	if (shapes[shapeIndex])
+		update_self_collisions(dot, i, shapes[shapeIndex].dots, shapeIndex + 1);
 }
 
 function updateBorderCollision(dot) {
@@ -274,6 +277,8 @@ function updateBorderCollision(dot) {
 		if (valueUsed < minTreshold)
 			dot.velocityY = 0;
 	}
+	// if (valueUsed > 10)
+	// 	breakDot(dot, null);
 	if (valueUsed > 2)
 		au.playMarbleSound(dot, valueUsed);
 }

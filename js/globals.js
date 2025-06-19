@@ -54,3 +54,6 @@ selDot = null;
 selBox = null;
 sel = null;
 tpa = null, tpb = null;
+curShape = null;
+shapes = [];
+lineSpeed = 2;

@@ -332,7 +332,6 @@ function initButtons(contentWrapper, controls)
 		boxButton.className = typeClass;
 		boxButton.classList.add("boxButton");
 		boxButton.textContent = boxNames[i];
-		boxButton.style.backgroundColor = i == 1 ? "rgba(0, 255, 0, .8)" : "rgba(0, 0, 0, 0.1)";
 		boxButton.style.width = ctrl_width;
 		boxButton.style.left = (10 + i * ctrl_width) + "px";
 		boxButton.onclick = () => {switchBoxButton(boxButton, i, typeClass);};
@@ -346,8 +345,13 @@ function switchBoxButton(boxButton, newIndex, newTypeClass)
 	au.playSound(au.click);
 	boxType = newTypeClass;
 	activeBoxIndex = newIndex;
-	boxButtons.forEach(btn => btn.style.backgroundColor = "rgba(0, 0, 0, 0.1)");
-	boxButton.style.backgroundColor = "rgba(0, 255, 0, .8)";
+	for (const b of boxButtons)
+	{
+		// b.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
+		b.style.border = "1px solid rgba(255, 255, 255, 0.3)";
+	}
+	// boxButton.style.backgroundColor = "rgba(0, 255, 0, .8)";
+	boxButton.style.border = "2px solid rgba(0, 245, 45, 0.99)";
 }
 
 function initUi()

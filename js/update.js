@@ -37,7 +37,6 @@ function linkDots(dotA, dotB, enforce = false)
 		dotA.linkHead = dotB.linkHead;
 }
 
-
 function deleteDotLinks(dot)
 {
 	if (dot.linkChild) {
@@ -79,6 +78,7 @@ function deleteDotLinks(dot)
 	dot.classList.remove("linked");
 }
 
+
 function updateLink(dot, linkParent = dot.linkParent) {
 	if (!dot.linkLine || !linkParent) return;
 
@@ -88,19 +88,35 @@ function updateLink(dot, linkParent = dot.linkParent) {
 	const y2 = linkParent.centerY;
 	const dx = x2 - x1;
 	const dy = y2 - y1;
-	const length = Math.sqrt(dx * dx + dy * dy);
+	const currentLen = Math.sqrt(dx * dx + dy * dy);
 	const angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
 	dot.linkLine.style.left = x1 + "px";
 	dot.linkLine.style.top = y1 + "px";
-	dot.linkLine.style.width = length + "px";
+	dot.linkLine.style.width = currentLen + "px";
 	dot.linkLine.style.transform = `rotate(${angle}deg)`;
-	dot.velocityX += minmax(-10, 10, dx * stickStiff * (deltaTime * speed));
-	dot.velocityY += minmax(-10, 10, dy * stickStiff * (deltaTime * speed));
-	dot.velocityX *= .6;
-	dot.velocityY *= .6;
-	dot.style.left = dot.x + "px";
-	dot.style.top = dot.y + "px";
+
+	const baseDX = dot.linkLine.baseDX;
+	const baseDY = dot.linkLine.baseDY;
+	const baseLen = Math.sqrt(baseDX ** 2 + baseDY ** 2);
+	if (!dot.shape) {
+		dot.velocityX += minmax(-10, 10, dx * stickStiff * (deltaTime * speed));
+		dot.velocityY += minmax(-10, 10, dy * stickStiff * (deltaTime * speed));
+		dot.velocityX *= 0.6;
+		dot.velocityY *= 0.6;
+		return;
+	}
+	const elasticTolerance = 5; // pixels
+	const stretch = currentLen - baseLen;
+	if (Math.abs(stretch) < elasticTolerance)
+		return;
+	const nx = dx / currentLen;
+	const ny = dy / currentLen;
+	const force = stretch * stickStiff * (deltaTime * speed);
+	dot.velocityX += minmax(-10, 10, nx * force);
+	dot.velocityY += minmax(-10, 10, ny * force);
+	dot.velocityX *= 0.6;
+	dot.velocityY *= 0.6;
 }
 
 function setNewLinkHead(newhead)
@@ -129,7 +145,6 @@ function updateSelDot()
 {
 	if (selDot.inGel)
 	{
-		console.warn("YOPPP");	
 		selDot.x += (mouseX - (selDot.x - selDot.radius)) * .1;
 		selDot.y += (mouseY - (selDot.y - selDot.radius)) * .1;
 	}
@@ -144,95 +159,127 @@ function updateSelDot()
 	selDot.centerY = selDot.y + selDot.radius;
 	selDot.velocityX = 0;
 	selDot.velocityY = 0;
+	let node = selDot;
+	let pullFactor = 1;
+	const visited = new Set();
+	while (node){
+		const parent = node.linkParent;
+		if (parent && !visited.has(parent)) {
+			visited.add(parent);
+			const dx = node.x - parent.x;
+			const dy = node.y - parent.y;
+			parent.x += dx * pullFactor;
+			parent.y += dy * pullFactor;
+			node = parent;
+			pullFactor *= 0.5;
+		}else{
+			node.x += pullFactor * 0.5;
+			node.y += pullFactor * 0.5;
+			break;
+		}
+	}
+}
+
+function updateDot(dot, i)
+{
+	dot.centerX = dot.x + dot.radius;
+	dot.centerY = dot.y + dot.radius;
+	if (!dot.linkChild && !dot.linkParent && dot.linkLine)
+		deleteDotLinks(dot);
+	if (dot == selDot)
+	{
+		if (dot.linkParent)
+			updateLink(dot);
+		return;
+	}
+	if (dot.linkParent)
+	{
+		if (stickStiff <= 0)
+		{
+			if (dot.linkLine)
+				dot.linkLine.remove();
+			dot.linkParent = null;
+		}
+		if (stickStiff == 1)
+		{
+			dot.x = dot.linkParent.x + minmax(-5, 5, dot.offsetX);
+			dot.y = dot.linkParent.y + minmax(-5, 5, dot.offsetY);
+			dot.style.left = dot.x + "px";
+			dot.style.top = dot.y + "px";
+			return;
+		}
+	}
+	dot.newX = dot.x + (dot.velocityX * dot.speed * (deltaTime * speed));
+	dot.newY = dot.y + (dot.velocityY * dot.speed * (deltaTime * speed));
+	dot.newCenterX = dot.x + dot.radius;
+	dot.newCenterY = dot.y + dot.radius;
+	dot.lifeTime = time - dot.startTime;
+	if (dot.isLinkHead) {
+		const baseAngle = Math.atan2(dot.velocityY, dot.velocityX);
+		const timeFactor = time * 0.001;
+		const wave = Math.sin(timeFactor + dot.id * 2) * 0.05; // Amplitude réduite
+		const wiggle = (Math.random() - 0.5) * 0.01;
+		dot.angle = baseAngle + wave + wiggle;
+		const speed = Math.sqrt(dot.velocityX ** 2 + dot.velocityY ** 2) || 0.5;
+		dot.velocityX = Math.cos(dot.angle) * speed;
+		dot.velocityY = Math.sin(dot.angle) * speed;
+		const margin = 80;
+		const repelStrength = 1;
+		if (dot.newX < margin)
+			dot.velocityX += repelStrength * (1 - dot.x / margin);
+		else if (dot.newX > window.innerWidth - margin)
+			dot.velocityX -= repelStrength * (1 - (window.innerWidth - dot.x) / margin);
+		if (dot.newY < margin)
+			dot.velocityY += repelStrength * (1 - dot.y / margin);
+		else if (dot.newY > window.innerHeight - margin)
+			dot.velocityY -= repelStrength * (1 - (window.innerHeight - dot.y) / margin);
+	}
+	// else if (!dot.shape)
+	{
+		dot.velocityY += yGravity * (deltaTime * speed);
+		dot.velocityX += xGravity * (deltaTime * speed);
+	}
+	dot.velocityX *= 1 - xDrag * (deltaTime * speed);
+	dot.velocityY *= 1 - yDrag * (deltaTime * speed);
+	if (Math.abs(dot.velocityX) < 0.01) dot.velocityX = 0;
+	if (Math.abs(dot.velocityY) < 0.01) dot.velocityY = 0;
+	updateBorderCollision(dot);
+	update_self_collisions(dot, i);
+	update_box_collisions(dot);
+	dot.x = dot.newX;
+	dot.y = dot.newY;
+	dot.style.left = dot.x + "px";
+	dot.style.top = dot.y + "px";
+	if (dot.linkParent)
+		updateLink(dot, dot.linkParent);
 }
 
 function updateDots(dots) {
 	if (selDot)
 		updateSelDot();
-	for (let i = 0; i < dots.length; i++) {
-		const dot = dots[i];
-		dot.centerX = dot.x + dot.radius;
-		dot.centerY = dot.y + dot.radius;
-		if (!dot.linkChild && !dot.linkParent && dot.linkLine)
-			deleteDotLinks(dot);
-		if (dot == selDot)
-		{
-			if (dot.linkParent)
-				updateLink(dot);
-			continue;
-		}
-		if (dot.linkParent)
-		{
-			if (stickStiff <= 0 || !selfCollision)
-			{
-				if (dot.linkLine)
-					dot.linkLine.remove();
-				dot.linkParent = null;
-			}
-			if (stickStiff == 1)
-			{
-				dot.x = dot.linkParent.x + minmax(-5, 5, dot.offsetX);
-				dot.y = dot.linkParent.y + minmax(-5, 5, dot.offsetY);
-				dot.style.left = dot.x + "px";
-				dot.style.top = dot.y + "px";
-				continue;
-			}
-		}
-		dot.newX = dot.x + (dot.velocityX * dot.speed * (deltaTime * speed));
-		dot.newY = dot.y + (dot.velocityY * dot.speed * (deltaTime * speed));
-		dot.newCenterX = dot.x + dot.radius;
-		dot.newCenterY = dot.y + dot.radius;
-		dot.lifeTime = time - dot.startTime;
-		if (dot.isLinkHead) {
-			const baseAngle = Math.atan2(dot.velocityY, dot.velocityX);
-			const timeFactor = time * 0.001;
-			const wave = Math.sin(timeFactor + dot.id * 2) * 0.05; // Amplitude réduite
-			const wiggle = (Math.random() - 0.5) * 0.01;
-			dot.angle = baseAngle + wave + wiggle;
-			const speed = Math.sqrt(dot.velocityX ** 2 + dot.velocityY ** 2) || 0.5;
-			dot.velocityX = Math.cos(dot.angle) * speed;
-			dot.velocityY = Math.sin(dot.angle) * speed;
-			if (selDot && selDot == dot.linkParent)
-			{
-				dot.velocityX += mouseDX * .01;
-				dot.velocityY += mouseDY *.01;
-			}
-			const margin = 80;
-			const repelStrength = 1;
-			if (dot.newX < margin)
-				dot.velocityX += repelStrength * (1 - dot.x / margin);
-			else if (dot.newX > window.innerWidth - margin)
-				dot.velocityX -= repelStrength * (1 - (window.innerWidth - dot.x) / margin);
-			if (dot.newY < margin)
-				dot.velocityY += repelStrength * (1 - dot.y / margin);
-			else if (dot.newY > window.innerHeight - margin)
-				dot.velocityY -= repelStrength * (1 - (window.innerHeight - dot.y) / margin);
-		}
-		else
-		{
-			dot.velocityY += yGravity * (deltaTime * speed);
-			dot.velocityX += xGravity * (deltaTime * speed);
-		}
-		dot.velocityX *= 1 - xDrag * (deltaTime * speed);
-		dot.velocityY *= 1 - yDrag * (deltaTime * speed);
-		if (Math.abs(dot.velocityX) < 0.01) dot.velocityX = 0;
-		if (Math.abs(dot.velocityY) < 0.01) dot.velocityY = 0;
-		updateBorderCollision(dot);
-		update_self_collisions(dot, i);
-		update_box_collisions(dot);
-		dot.x = dot.newX;
-		dot.y = dot.newY;
-		dot.style.left = dot.x + "px";
-		dot.style.top = dot.y + "px";
-		if (dot.linkParent)
-			updateLink(dot, dot.linkParent);
-	}
+	for (let i = 0; i < dots.length; i++)
+		updateDot(dots[i], i);
 	dots_destroyed.forEach(d => {
 		if (typeof d.onRemove === "function") d.onRemove();
 		d.remove();
 		dots.splice(dots.indexOf(d), 1);
 	});
 	dots_destroyed = [];
+}
+
+function updateShape(shape)
+{
+	shape.velocityX += xGravity * deltaTime * speed;
+	shape.velocityY += yGravity * deltaTime * speed;
+	if (shape.last)
+		for (const dot of shape.dots)
+			updateDot(dot);
+}
+
+function updateShapes()
+{
+	for (const sh of shapes)
+		updateShape(sh);
 }
 
 let lastTime = performance.now();
@@ -244,7 +291,10 @@ function update()
 	lastTime = now;
 	updateDots(dots);
 	requestAnimationFrame(update);
-	if (now - dropTime > rate && (keys[" "] || (mousePressed && (keys["Shift"] || boxType == "box_none"))) && !isDraggingControls && !curBox && !selBox && !selDot) {
+	updateShapes();
+	if (curShape && mousePressed)
+		addToShape(curShape, mouseX, mouseY);
+	else if (now - dropTime > rate && (keys[" "] || (mousePressed && (keys["Shift"] || boxType == "box_none"))) && !isDraggingControls && !curBox && !selBox && !selDot) {
 		initDots(dots, mouseX, mouseY);
 		dropTime = now;
 	}

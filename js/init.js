@@ -1,4 +1,4 @@
-function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false)
+function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, shape = null)
 {
 	const dot = document.createElement("div");
 	dot.className = "dot";
@@ -9,6 +9,7 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false)
 	dot.size = size;
 	dot.radius = size / 2;
 	dot.linkParent = null;
+	dot.shape = shape;
 	dot.linkChild = null;
 	dot.linkHead = null;
 	dot.linkLine = null;
@@ -32,7 +33,6 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false)
 	dot.inGel = false;
 	dot.style.top = dot.y + "px";
 	dot.onmouseenter = function () {
-		console.warn("GOT ONE!");
 	};
 	dot.onRemove = function () {
 		createDotImpact(dot);
@@ -131,3 +131,75 @@ window.onload = () => {
 	initUi();
 	update();
 };
+
+function initShape(x, y)
+{
+	const newShape = document.createElement("div");
+	newShape.x = x;
+	newShape.y = y;
+	newShape.style.left = x;
+	newShape.style.top = y;
+	newShape.dots = [];
+	newShape.style.position = "absolute";
+	newShape.first = null;
+	newShape.velocityX = 0;
+	newShape.velocityY = 0;
+	newShape.last = null;
+	document.body.appendChild(newShape);
+	newShape.first = addToShape(newShape, x, y, true);
+	shapes.push(newShape);
+	return newShape;
+}
+
+function addToShape(shape, x, y, isFirst = false, closeShape = false)
+{
+	const firstDot = shape.dots[0];
+	let isLast = closeShape ? true : firstDot && shape.dots.length > 5 && (Math.abs(x - firstDot.x) < 10 && Math.abs(y - firstDot.y) < 10);
+	if (isLast && !closeShape)
+		mousePressed = false;
+	const prevDot = isFirst ? null : isLast ? firstDot : shape.dots[shape.dots.length - 1];
+	const newDot = getDot(x, y, 50, 0, false, shape);
+	newDot.speed = lineSpeed;
+	newDot.velocityX = 0;
+	newDot.velocityY = 0;
+	newDot.linkParent = null;
+	newDot.style.position = "absolute";
+	newDot.linkChild = null;
+	newDot.style.display = "none";
+	shape.appendChild(newDot);
+	shape.dots.push(newDot);
+	if (!prevDot)
+		return newDot;
+	newDot.linkLine = addLinkLine(newDot, prevDot);
+	updateLink(newDot, prevDot);
+	newDot.linkParent = prevDot;
+	prevDot.linkChild = newDot;
+	if (isLast)
+	{
+		shape.last = newDot;
+		if (shape == curShape)
+			curShape = null;
+	}
+	return newDot;
+}
+
+function addLinkLine(child, parent)
+{
+	const line = document.createElement("div");
+	line.className = "link-line";
+	line.dotA = child;
+	line.dotB = parent;
+	line.baseDX = -1;
+	line.baseDY = -1;
+	child.linkParent = parent;
+	if (parent)
+	{
+		parent.linkChild = child;
+		child.offsetX = child.x - parent.x;
+		child.offsetY = child.y - parent.y;
+		line.baseDX = child.x - parent.x;
+		line.baseDY = child.y - parent.y;
+	}
+	document.body.appendChild(line);
+	return line;
+}
