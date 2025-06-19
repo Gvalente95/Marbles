@@ -127,7 +127,7 @@ addEventListener('keydown', (e) => {
 	}
 	else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
 		boxButtons[activeBoxIndex].style.backgroundColor = "rgba(0, 0, 0, 0.1)";
-		activeBoxIndex = (activeBoxIndex + (keys["shift"] ? -1 : 1) + boxButtons.length) % boxButtons.length;
+		activeBoxIndex = (activeBoxIndex + (e.key === "ArrowLeft" ? -1 : 1) + boxButtons.length) % boxButtons.length;
 		boxButtons[activeBoxIndex].style.backgroundColor = "rgba(0, 255, 0, .8)";
 		boxType = boxButtons[activeBoxIndex].className;
 		au.playSound(au.click);

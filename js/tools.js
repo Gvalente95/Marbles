@@ -64,7 +64,7 @@ function createGelRipple(box, x, y, radius = 20, dur = .5, color = "rgba(60, 141
 function getBoxAtPos(x, y, radius = 20)
 {
 	const len = boxes.length;
-	for (let i = len; i > 0; i--)
+	for (let i = len - 1; i >= 0; i--)
 	{
 		const b = boxes[i];
 		if (boxesOverlap(b.x, b.y, b.width, b.height, x, y, radius, radius))
