@@ -102,9 +102,8 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 	valueDisplay.id = id + "Value";
 	valueDisplay.textContent = value;
 	valueDisplay.style.width = "40px";
-	valueDisplay.style.textAlign = "right";
 	valueDisplay.style.color = "rgba(0, 0, 0, 0.76)";
-	
+
 	attachHandleInfoBox(slider, () => slider.value);
 	slider.addEventListener("input", () => {	
 		valueDisplay.textContent = slider.value;
