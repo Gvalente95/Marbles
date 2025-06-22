@@ -444,7 +444,6 @@ function initUi()
 	controls.fullWidth = controls.style.width;
 	initStartMenu();
 	switchDarkMode(false);
-	musicMode = false;
 	switchMenuMode(true, true);
 	switchMenuPage(0, true);
 	switchBoxButton(0);
