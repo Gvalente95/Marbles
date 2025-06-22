@@ -1,9 +1,9 @@
-.box_concrete {
+.Concrete {
 	position: absolute;
-	background: linear-gradient(145deg, rgb(154, 130, 130), rgb(80, 80, 80));
+	background:  rgb(59, 54, 54);
 	border: 1px solid rgba(255, 255, 255, 0.08);
 	box-shadow:
-		inset 0 0 5px rgba(0, 0, 0, 0.4),
+		inset 0 0 5px #00000066,
 		0 2px 8px rgba(0, 0, 0, 0.3);
 	border-radius: 4%;
 	z-index: 100;
@@ -11,7 +11,7 @@
 	backdrop-filter: blur(1px);
 }
 
-.box_gelatine {
+.Gelatine {
 	position: absolute;
 	background: rgba(95, 129, 171, 0.331);
 	border: 1px solid rgba(255, 255, 255, 0.2);
@@ -22,7 +22,7 @@
 	z-index: 100;
 }
 
-.box_magnetite {
+.Magnetite {
 	position: absolute;
 	background: rgba(0, 0, 0, 0.102);
 	border: 1px solid rgba(255, 255, 255, 0.3);
@@ -32,7 +32,7 @@
 	overflow: hidden;
 }
 
-.box_teleport {
+.Teleport {
 	position: absolute;
 	border: 1px solid rgba(255, 255, 255, 0.3);
 	box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
@@ -43,7 +43,7 @@
 	overflow: hidden;
 }
 
-.box_vortex {
+.Vortex {
 	position: absolute;
 	background: radial-gradient(circle, rgba(170, 0, 255, 0.2), rgba(255, 255, 255, 0));
 	border: 1px solid transparent;
@@ -53,6 +53,17 @@
 	transition: transform 0.2s ease;
 	z-index: 100;
 	overflow: hidden;
+}
+
+.screw {
+	box-shadow: 0 0 4px black;
+	transition: transform 0.2s ease;
+	transform: scale(0.8);
+}
+
+.screw:hover {
+	transform: scale(1.2);
+	background-color: #ccc;
 }
 
 @keyframes gelRipple {

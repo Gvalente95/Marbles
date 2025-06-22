@@ -1,4 +1,4 @@
-function createButton({ labelText, id, value, onChange, keyBind = null }) {
+function createButton({ labelText, id, value, pageIndex, onChange, keyBind = null , info = null}) {
 	let currentValue = value;
 
 	const button = document.createElement("button");
@@ -17,15 +17,16 @@ function createButton({ labelText, id, value, onChange, keyBind = null }) {
 	button.style.overflow = "hidden";
 	button.style.fontSize = "14px";
 	button.style.color = "black";
+	button.pageIndex = pageIndex;
 
-	const onColor = "rgba(28, 194, 95, 0.67)";
-	const offColor = "rgba(187, 36, 36, 0.61)";
-	button.style.backgroundColor = currentValue == null ? "rgba(171, 102, 102, 0.61)" : currentValue ? onColor : offColor;
+	const onColor = "rgba(28, 194, 95, 0.3)";
+	const offColor = "rgba(187, 36, 36, 0.3)";
+	button.style.backgroundColor = currentValue == null ? "rgba(132, 132, 132, 0.2)" : currentValue ? onColor : offColor;
 
 	// Keybind section (left side)
 	const keyDiv = document.createElement("div");
 	keyDiv.textContent = keyBind ? keyBind : "";
-	keyDiv.style.width = "15%";
+	keyDiv.style.width = 50 + "px";
 	keyDiv.style.height = "100%";
 	keyDiv.style.display = "flex";
 	keyDiv.style.alignItems = "center";
@@ -42,9 +43,11 @@ function createButton({ labelText, id, value, onChange, keyBind = null }) {
 	labelDiv.style.display = "flex";
 	labelDiv.style.alignItems = "center";
 	labelDiv.style.paddingLeft = "64px";
+	labelDiv.pageIndex = pageIndex;
+	button.labelDiv = labelDiv;
 	button.appendChild(keyDiv);
 	button.appendChild(labelDiv);
-
+	addInfoBox(button, info);
 	const toggle = () => {
 		onChange(currentValue);
 		au.playSound(au.click);
@@ -69,18 +72,22 @@ function createButton({ labelText, id, value, onChange, keyBind = null }) {
 	return button;
 }
 
-function createSlider({ labelText, id, min, max, step, value, onChange }) {
+function createSlider({ labelText, info, id, min, max, step, value, pageIndex, onChange }) {
 	const label = document.createElement("label");
 	label.style.userSelect = "none";
 	label.style.display = "flex";
 	label.style.alignItems = "center";
 	label.style.gap = "8px";
 	label.style.margin = "4px 0";
+	label.pageIndex = pageIndex;
 
 	const labelSpan = document.createElement("span");
 	labelSpan.textContent = labelText + ":";
 	labelSpan.style.minWidth = "70px";
 	labelSpan.style.color = "rgba(0, 0, 0, 0.84)";
+	labelSpan.pointerEvents = "block";
+	labelSpan.pageIndex = pageIndex;
+	addInfoBox(labelSpan, info + " [" + min + " - " + max + "]");
 
 	const slider = document.createElement("input");
 	slider.type = "range";
@@ -91,196 +98,162 @@ function createSlider({ labelText, id, min, max, step, value, onChange }) {
 	slider.value = value;
 	slider.style.flex = "1";
 	slider.style.backgroundColor = "rgba(0, 0, 0, 0.73)";
-
 	const valueDisplay = document.createElement("span");
 	valueDisplay.id = id + "Value";
 	valueDisplay.textContent = value;
 	valueDisplay.style.width = "40px";
 	valueDisplay.style.textAlign = "right";
 	valueDisplay.style.color = "rgba(0, 0, 0, 0.76)";
-
+	
+	attachHandleInfoBox(slider, () => slider.value);
 	slider.addEventListener("input", () => {	
 		valueDisplay.textContent = slider.value;
 		onChange(parseFloat(slider.value));
 	});
-
 	label.appendChild(labelSpan);
 	label.appendChild(slider);
 	label.appendChild(valueDisplay);
 	return label;
 }
 
-let hasMovedControls = false;
-let pendingFrame = false;
-let isDraggingControls = false;
-function moveControls(controls)
-{
-	controls.addEventListener("mousedown", (e) => {
-		if (e.target.tagName === 'INPUT' ||
-		e.target.tagName === 'BUTTON' ||
-		e.target.closest('.ui')) return;
-		isDraggingControls = true;
-		const width = controls.offsetWidth;
-		const height = controls.offsetHeight;
-		offsetX = e.clientX - controls.offsetLeft;
-		offsetY = e.clientY - controls.offsetTop;
-		controls.maxLeft = window.innerWidth - width;
-		controls.maxTop = window.innerHeight - height;
-		controls.style.cursor = "move";
-	});
-
-	document.addEventListener("mousemove", (e) => {
-		if (!isDraggingControls) return;
-
-		lastMouseX = e.clientX;
-		lastMouseY = e.clientY;
-		if (!pendingFrame) {
-			pendingFrame = true;
-			requestAnimationFrame(() => {
-				const newLeft = Math.max(0, Math.min(controls.maxLeft, lastMouseX - offsetX));
-				const newTop = Math.max(0, Math.min(controls.maxTop, lastMouseY - offsetY));
-				controls.style.left = `${newLeft}px`;
-				controls.style.top = `${newTop}px`;
-				hasMovedControls = true;
-				pendingFrame = false;
-			});
-		}
-	});
-
-	document.addEventListener("mouseup", () => {
-		if (hasMovedControls) {
-			setTimeout(() => hasMovedControls = false, 10);
-		}
-		isDraggingControls = false;
-		controls.style.cursor = "default";
-	});
-}
-
 function initSliders(contentWrapper)
 {
 	contentWrapper.appendChild(createSlider({
 	labelText: "Click",
+	info: "How many new dots per click.",
 	id: "amountSlider",
 	min: 1,
 	max: 50,
 	step: 1,
 	value: params.amount,
+	pageIndex: 0,
 	onChange: (v) => amount = v,
-	}));
-
+	})); // click
 	contentWrapper.appendChild(createSlider({
 	labelText: "Rate",
+	info: "How often dots are created while mouse is pressed.",
 	id: "rateSlider",
 	min: .001,
 	max: 1,
 	step: .01,
 	value: params.rate,
+	pageIndex: 0,
 	onChange: (v) => rate = 1 - v
-	}));
-
+	})); // rate
 	contentWrapper.appendChild(createSlider({
 	labelText: "Speed",
 	id: "speedSlider",
+	info: "Controls the speed of the whole simulation, great for slow-mo' effect!",
 	min: 10000,
 	max: 100000,
 	step: 1000,
 	value: params.speed,
+	pageIndex: 0,
 	onChange: (v) => speed = v,
-	}));	
-
+	})); // speed
 	contentWrapper.appendChild(createSlider({
 	labelText: "minSize",
 	id: "sizeSlider",
+	info: "Minimum size of newly-created dots.",
 	min: 5,
-	max: 50,
+	max: 200,
 	step: 1,
 	value: params.minSize,
+	pageIndex: 0,
 	onChange: (v) => minSize = v
-	}));
-
+	})); // minSize
 	contentWrapper.appendChild(createSlider({
 	labelText: "maxSize",
 	id: "sizeSlider",
+	info: "Maximum size of newly-created dots.",
 	min: 5,
 	max: 200,
 	step: 1,
 	value: params.maxSize,
+	pageIndex: 0,
 	onChange: (v) => maxSize = v
-	}));
-
+	})); // maxSize
 	contentWrapper.appendChild(createSlider({
 	labelText: "Stick-Stiffness",
 	id: "stickStiffSlider",
+	info: "Controls how much glue is applied to dots linked together",
 	min: 0,
 	max: 1,
 	step: .01,
 	value: params.stickStiff,
+	pageIndex: 0,
 	onChange: (v) => stickStiff = v
-	}));
-
+	})); // stick
 	contentWrapper.appendChild(createSlider({
 	labelText: "yGravity",
 	id: "yGravitySlider",
+	info: "Vertical gravity modifier",
 	min: -1,
 	max: 1,
 	step: .1,
 	value: params.yGravity,
+	pageIndex: 0,
 	onChange: (v) => yGravity = v
-	}));
-
+	})); // yGrav
 	contentWrapper.appendChild(createSlider({
 	labelText: "xGravity",
 	id: "xGravitySlider",
+	info: "Horizontal gravity modifier",
 	min: -1,
 	max: 1,
 	step: 0.1,
 	value: params.xGravity,
+	pageIndex: 0,
 	onChange: (v) => xGravity = v
-	}));
-
+	})); // xGrav
 	contentWrapper.appendChild(createSlider({
 	labelText: "xDrag",
 	id: "DragSlider",
+	info: "Controls the ammount of horizontal velocity loss due to collisions applied to dots",
 	min: 0,
-	max: 0.1,
+	max: .5,
 	step: 0.01,
 	value: params.xDrag,
+	pageIndex: 0,
 	onChange: (v) => xDrag = v
-	}));
-
+	})); // xDrag
 	contentWrapper.appendChild(createSlider({
 	labelText: "yDrag",
 	id: "DragSlider",
+	info: "Controls the ammount of vertical velocity loss due to collisions applied to dots",
 	min: 0,
-	max: 0.1,
+	max: .5,
 	step: 0.01,
 	value: params.yDrag,
+	pageIndex: 0,
 	onChange: (v) => yDrag = v
-	}));
-
+	})); // yDrag
 	contentWrapper.appendChild(createSlider({
 	labelText: "Bounce",
 	id: "bounceSlider",
+	info: "Dots bounciness modifier, make'em jump!",
 	min: 0,
 	max: 1,
 	step: 0.01,
 	value: params.bounceFactor,
+	pageIndex: 0,
 	onChange: (v) => bounceFactor = v
-	}));
-
+	})); // bounce
 	contentWrapper.appendChild(createSlider({
 	labelText: "Max",
 	id: "maxSlider",
+	info: "Limits the maximum amount of dots",
 	min: 5,
 	max: 2500,
 	step: 1,
 	value: params.maxDots,
+	pageIndex: 0,
 	onChange: (v) => maxDots = v
-	}));
+	})); // max dots
 }
 
 let activeBoxIndex = 1;
-let boxType = "box_gelatine";
+let boxType = "Gelatine";
 let	boxButtons = [];
 function initButtons(contentWrapper, controls)
 {
@@ -288,82 +261,176 @@ function initButtons(contentWrapper, controls)
 		labelText: "Reset",
 		id: "ResetButton",
 		value: null,
+		pageIndex: 1,
 		onChange: (v) => reset(),
 		keyBind: "R",
-	}));
-
+		info: "Delete all dots, boxes and shapes",
+	})); // reset
 	contentWrapper.appendChild(createButton({
 		labelText: "Audio",
 		id: "SwitchAuButton",
 		value: au.active,
+		pageIndex: 1,
 		onChange: (v) => au.active = !au.active,
 		keyBind: "A",
-	}));
-
+		info: "Enable/Disable audio",
+	})); // audio
 	contentWrapper.appendChild(createButton({
 		labelText: "Self Collisions",
 		id: "SelfCollisionsButton",
 		value: selfCollision,
+		pageIndex: 1,
 		onChange: (v) => selfCollision = !selfCollision,
 		keyBind: "C",
-	}));
-
+		info: "enable/disable collisions between dots",
+	})); // self Collisions
 	contentWrapper.appendChild(createButton({
 		labelText: "Dark Mode",
 		id: "DarkModeButton",
 		value: darkMode,
+		pageIndex: 1,
 		onChange: (v) => switchDarkMode(),
 		keyBind: "D",
-	}));
-
+		info: "enable/disable dark mode",
+	})); // Dark Mode
 	contentWrapper.appendChild(createButton({
 		labelText: "Music Mode",
 		id: "MusicModeButton",
 		value: musicMode,
+		pageIndex: 1,
 		onChange: (v) => musicMode = !musicMode,
 		keyBind: "M",
-	}));
+		info: "enable/disable musical notes on dots impact",
+	})); // music mode
+	contentWrapper.appendChild(createButton({
+		labelText: "Link all dots",
+		id: "LinkAllButton",
+		value: null,
+		pageIndex: 1,
+		onChange: (v) => linkAllDots(),
+		keyBind: "L",
+		info: "Link all dots together",
+	})); // Link all dots
+	contentWrapper.appendChild(createButton({
+		labelText: "Attach Boxes",
+		id: "GroupBoxesButton",
+		value: null,
+		pageIndex: 1,
+		onChange: (v) => groupBox(getBoxAtPos(mouseX, mouseY), false),
+		keyBind: "G",
+		info: "Attach all boxes connected to the one behind the cursor",
+	})); // Attach boxes
+	contentWrapper.appendChild(createButton({
+		labelText: "Dettach Boxes",
+		id: "DetachBoxesButton",
+		value: null,
+		pageIndex: 1,
+		onChange: (v) => groupBox(getBoxAtPos(mouseX, mouseY), true),
+		keyBind: "F",
+		info: "Dettach all boxes connected to the one behind the cursor",
+	})); // Detach boxes
+
+	const setButton = createButton({
+		labelText: "Keys" + "\u00A0".repeat(20) + "Controls",
+		id: "SwitchPageButton",
+		value: null,
+		pageIndex: -1,
+		onChange: (v) => { switchMenuPage((contentWrapper.pageIndex + 1) % 2); },
+		keyBind: "P",
+		info: null,
+	});
+	emptySpace = document.createElement("div");
+	emptySpace.style.height = "20px";
+	contentWrapper.appendChild(emptySpace);
+	setButton.style.background = "linear-gradient(to right, \
+	rgba(132, 132, 132, 0.49) 0%, \
+	rgba(0, 0, 0, 0.3) 20%, \
+	rgba(0, 0, 0, 0.15) 50%)";
+
+	setButton.labelDiv.style.paddingLeft = "32px";
+	setButton.style.top = "120%";
+	contentWrapper.appendChild(setButton);
 	const boxNames = ["Concrete", "Gelatine", "Magnetite", "Vortex", "Teleport", "None"];
 
-	const ctrl_width = 65;
+	const rect = contentWrapper.getBoundingClientRect();
 	for (let i = 0; i < 6; i++) {
 		const boxButton = document.createElement("div");
-		const typeClass = "box_" + boxNames[i].toLowerCase();
-		boxButton.className = typeClass;
+		boxButton.type = boxNames[i];
+		boxButton.className = boxButton.type;
 		boxButton.classList.add("boxButton");
 		boxButton.textContent = boxNames[i];
-		boxButton.style.width = ctrl_width;
-		boxButton.style.left = (10 + i * ctrl_width) + "px";
-		boxButton.onclick = () => {switchBoxButton(boxButton, i, typeClass);};
+		boxButton.style.borderRadius = "0";
+		if (boxButton.textContent === "Teleport")
+			boxButton.style.background = "linear-gradient(to right, rgba(57, 204, 116, 0.3) 50%, rgba(255, 0, 0, 0.33) 50%)";
+		boxButton.style.width = 55 + "px";
+		boxButton.style.top = "100%";
+		boxButton.style.left = 10 + (i * 55) + "px";
+		boxButton.onclick = () => { switchBoxButton(i); };
+		addInfoBox(boxButton, boxNames[i]);
 		boxButtons.push(boxButton);
-		controls.appendChild(boxButton);
+		contentWrapper.appendChild(boxButton);
 	}
 }
 
-function switchBoxButton(boxButton, newIndex, newTypeClass)
+function addLeter(letter)
 {
-	au.playSound(au.click);
-	boxType = newTypeClass;
-	activeBoxIndex = newIndex;
-	for (const b of boxButtons)
-	{
-		// b.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
-		b.style.border = "1px solid rgba(255, 255, 255, 0.3)";
-	}
-	// boxButton.style.backgroundColor = "rgba(0, 255, 0, .8)";
-	boxButton.style.border = "2px solid rgba(0, 245, 45, 0.99)";
+	const label = document.createElement("div");
+	label.className = "titleLetter";
+	label.textContent = letter;
+	label.style.position = "relative";
+	label.pointerEvents = "block";
+	label.style.zIndex = "9999";
+	return label;
+}
+
+function initStartMenu() {
+	menuBlock = document.createElement("div");
+	menuBlock.className = "menuBlock";
+	menuBlock.style.top = "50%";
+	menuBlock.style.left = "50%";
+	menuBlock.id = "menuBlock";
+	menuBlock.active = true;
+	menuBlock.started = false;
+	menuBlock.onclick = () => switchMenuMode();
+	const text = "Marbles";
+	menuBlock.appendChild(addLeter(text));
+	const subText = document.createElement("div");
+	subText.className = "subText";
+	subText.textContent = "By Gvalente";
+	subText.pointerEvents = "none";
+	menuBlock.appendChild(subText);
+	document.body.appendChild(menuBlock);
+	// initGlass(menuBlock);
+	return menuBlock;
+}
+
+function initGlass(menuBlock)
+{
+	const w = menuBlock.getBoundingClientRect().width * .7 ;
+	const bw = 40;
+	boxes.push(init_box(window.innerWidth / 2 - w - bw - 1, window.innerHeight - 500, bw, 500, "Concreet"));
+	boxes.push(init_box(window.innerWidth / 2 + w + 15, window.innerHeight - 500, bw, 500, "Concrete"));
+	boxes.push(init_box(window.innerWidth / 2 - w, window.innerHeight - bw, w * 2 + 15, bw, "Conceret"));
+	boxes.forEach(b => { b.style.opacity = "0.1"; });
+	boxes.push(init_box(window.innerWidth / 2 - w, window.innerHeight - bw - 200, w * 2 + 15, 200, "Gelatine"));
 }
 
 function initUi()
 {
 	const controls = document.getElementById("controls");
-	moveControls(controls);
+	controls.addEventListener("mouseenter", () => { controls.style.opacity = "1"; });
+	controls.addEventListener("mouseleave", () => { if (!minimize) return; controls.style.opacity = ".5"; });
+	initDragControls(controls);
+	addResizer(controls, "left", null, 300, 600);
+	addResizer(controls, "right", null, 300, 600);
 	const header = document.createElement("div");
 	header.id = "controlsHeader";
-	header.textContent = "Controls";
+	header.textContent = "SETTINGS";
 	header.onclick = () => toggle_minimize_controls();
 	controls.appendChild(header);
+	controls.header = header;
 	contentWrapper = document.createElement("div");
+	contentWrapper.pageIndex = 0;
 	contentWrapper.className = "control-content";
 	contentWrapper.id = "ControlWrapper";
 	controls.appendChild(contentWrapper);
@@ -374,119 +441,12 @@ function initUi()
 	initSliders(contentWrapper);
 	initButtons(contentWrapper, controls);
 	[...controls.querySelectorAll("label, span, button")].forEach(el => el.style.color = "black");
-	switchDarkMode(true);
-}
-
-const baseDark =  "rgb(38, 36, 39)";
-const baseWhite = "rgb(231, 204, 248)";
-function switchDarkMode(active = !darkMode) {
-	darkMode = active;
-	document.body.style.background = darkMode ? baseDark : baseWhite;
-
-	const controls = document.getElementById("controls");
-	if (!controls) return;
-
-	const header = document.getElementById("controlsHeader");
-	header.style.color = darkMode ? "white" : "black";
-
-	if (darkMode) {
-		controls.style.background = "rgba(255, 255, 255, 0.1)";
-		controls.style.backdropFilter = "blur(10px)";
-		controls.style.color = "white";
-		[...controls.querySelectorAll("label, span, button")].forEach(el => el.style.color = "white");
-	} else {
-		controls.style.background = "rgba(255, 255, 255, 0.6)";
-		controls.style.backdropFilter = "blur(10px)";
-		controls.style.color = "black";
-		[...controls.querySelectorAll("label, span, button")].forEach(el => el.style.color = "black");
-	}
-}
-
-let minimize = false;
-function toggle_minimize_controls(newMinimize = !minimize) {
-	if (hasMovedControls)
-		return;
-	minimize = newMinimize;
-	controls.classList.toggle("minimized", minimize);
-	au.playGelSound();
-}
-
-
-let isResizing = false;
-function addResizer(element, horDir, verDir) {
-	const resizer = document.createElement("div");
-	resizer.className = "resizer";
-	resizer.style.position = "absolute";
-	resizer.style.width = horDir && !verDir ? "10px" : "15px";
-	resizer.style.height = verDir && !horDir ? "10px" : "15px";
-	resizer.style.cursor =
-		(horDir === "left" || horDir === "right" ? "ew-resize" : "") +
-		(verDir === "top" || verDir === "bottom" ? (horDir ? "-" : "") + "ns-resize" : "");
-	if (horDir === "left") resizer.style.left = "0";
-	if (horDir === "right") resizer.style.right = "0";
-	if (verDir === "top") resizer.style.top = "0";
-	if (verDir === "bottom") resizer.style.bottom = "0";
-
-	element.appendChild(resizer);
-
-	const startResize = (startX, startY) => {
-		const startWidth = element.offsetWidth;
-		const startHeight = element.offsetHeight;
-		const startLeft = element.offsetLeft;
-		const startTop = element.offsetTop;
-		isResizing = true;
-		const onMove = (e) => {
-			const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-			const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-			if (horDir === "right") {
-				element.width = Math.max(20, startWidth + (clientX - startX));
-				element.style.width = element.width + "px";
-			} else if (horDir === "left") {
-				element.x = startLeft + (clientX - startX);
-				element.width = Math.max(20, startWidth - (clientX - startX));
-				element.style.width = element.width + "px";
-				element.style.left = element.x + "px";
-			}
-
-			if (verDir === "bottom") {
-				element.height = Math.max(20, startHeight + (clientY - startY));
-				element.style.height = element.height + "px";
-			} else if (verDir === "top") {
-				element.y = startTop + (clientY - startY);
-				element.height = Math.max(20, startHeight - (clientY - startY));
-				element.style.height = element.height + "px";
-				element.style.top = element.y + "px";
-			}
-		};
-
-		const stopResize = () => {
-			isResizing = false;
-			document.removeEventListener("mousemove", onMove);
-			document.removeEventListener("mouseup", stopResize);
-			document.removeEventListener("touchmove", onMove);
-			document.removeEventListener("touchend", stopResize);
-		};
-
-		document.addEventListener("mousemove", onMove);
-		document.addEventListener("mouseup", stopResize);
-		document.addEventListener("touchmove", onMove);
-		document.addEventListener("touchend", stopResize);
-	};
-
-	resizer.addEventListener("mousedown", (e) => {
-		e.preventDefault();
-		startResize(e.clientX, e.clientY);
-	});
-	resizer.addEventListener("touchstart", (e) => {
-		e.preventDefault();
-		startResize(e.touches[0].clientX, e.touches[0].clientY);
-	}, { passive: false });
-}
-
-function addResizers(element)
-{
-	addResizer(element, "left", "top");
-	addResizer(element, "left", "bottom");
-	addResizer(element, "right", "top");
-	addResizer(element, "right", "bottom");
+	controls.fullWidth = controls.style.width;
+	initStartMenu();
+	switchDarkMode(false);
+	musicMode = false;
+	switchMenuMode(true, true);
+	switchMenuPage(0, true);
+	switchBoxButton(0);
+	moveControls(controls, 25, 40);
 }

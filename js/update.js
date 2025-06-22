@@ -1,272 +1,3 @@
-function linkDots(dotA, dotB, enforce = false)
-{
-	if (!enforce)
-	{
-		if (dotA.linkParent != null || !selDot || selDot == dotA)
-			return;
-		if (dotB != selDot && dotB.linkParent == null)
-			return;
-		if (dotB.linkChild && r_range(0, 1000))
-			return;
-		if (dotA.isLinkHead)
-			return;
-	}
-	if (dotA.linkLine && enforce)
-		deleteDotLinks(dotA);
-	au.playGelSound(dotA, 1);
-	dotA.linkParent = dotB;
-	dotB.linkChild = dotA;
-	dotA.offsetX = dotA.x - dotB.x;
-	dotA.offsetY = dotA.y - dotB.y;
-	const line = document.createElement("div");
-	line.className = "link-line";
-	if (r_range(0, 10) > 0)
-		line.style.backgroundColor = dotA.style.backgroundColor;
-	line.dotA = dotA;
-	line.dotB = dotB;
-	document.body.appendChild(line);
-	dotA.linkLine = line;
-	dotB.classList.add("linked");
-	if (dotB == selDot || enforce) {
-		dotB.isLinkHead = true;
-		dotB.linkHead = dotB;
-		linkHeads.push(dotB);
-		dotA.linkHead = dotB;
-	}
-	else
-		dotA.linkHead = dotB.linkHead;
-}
-
-function deleteDotLinks(dot)
-{
-	if (dot.linkChild) {
-		const child = dot.linkChild;
-		child.linkParent = null;
-		if (child.linkChild) {
-			child.isLinkHead = true;
-			if (child.linkLine) {
-				child.linkLine.remove();
-				child.linkLine = null;
-			}
-			linkHeads.push(child);
-			dot.linkChild = null;
-		}
-		else
-			deleteDotLinks(dot.linkChild);
-	}
-	if (dot.linkParent) {
-		const parent = dot.linkParent;
-		parent.linkChild = null;
-		if (!parent.linkParent) {
-			parent.isLinkHead = false;
-			deleteDotLinks(dot.linkParent);
-		}
-		else if (parent.linkLine) {
-			parent.linkLine.remove();
-			parent.linkLine = null;
-		}
-		dot.linkParent = null;
-	}
-	if (dot.linkLine)
-		dot.linkLine.remove();
-		dot.linkLine = null;
-	const idx = linkHeads.indexOf(dot);
-	if (idx !== -1) linkHeads.splice(idx, 1);
-	dot.linkChild = null;
-	dot.linkParent = null;
-	dot.isLinkHead = false;
-	dot.classList.remove("linked");
-}
-
-
-function updateLink(dot, linkParent = dot.linkParent) {
-	if (!dot.linkLine || !linkParent) return;
-
-	const x1 = dot.centerX;
-	const y1 = dot.centerY;
-	const x2 = linkParent.centerX;
-	const y2 = linkParent.centerY;
-	const dx = x2 - x1;
-	const dy = y2 - y1;
-	const currentLen = Math.sqrt(dx * dx + dy * dy);
-	const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-	dot.linkLine.style.left = x1 + "px";
-	dot.linkLine.style.top = y1 + "px";
-	dot.linkLine.style.width = currentLen + "px";
-	dot.linkLine.style.transform = `rotate(${angle}deg)`;
-
-	const baseDX = dot.linkLine.baseDX;
-	const baseDY = dot.linkLine.baseDY;
-	const baseLen = Math.sqrt(baseDX ** 2 + baseDY ** 2);
-	if (!dot.shape) {
-		dot.velocityX += minmax(-10, 10, dx * stickStiff * (deltaTime * speed));
-		dot.velocityY += minmax(-10, 10, dy * stickStiff * (deltaTime * speed));
-		dot.velocityX *= 0.6;
-		dot.velocityY *= 0.6;
-		return;
-	}
-	const elasticTolerance = 5; // pixels
-	const stretch = currentLen - baseLen;
-	if (Math.abs(stretch) < elasticTolerance)
-		return;
-	const nx = dx / currentLen;
-	const ny = dy / currentLen;
-	const force = stretch * stickStiff * (deltaTime * speed);
-	dot.velocityX += minmax(-10, 10, nx * force);
-	dot.velocityY += minmax(-10, 10, ny * force);
-	dot.velocityX *= 0.6;
-	dot.velocityY *= 0.6;
-}
-
-function setNewLinkHead(newhead)
-{
-	let node = newhead.linkChild;
-	while (node)
-	{
-		if (node.linkHead == newhead)
-			return;
-		const nextNode = node.linkChild;
-		linkDots(node, newhead, true);
-		node = nextNode;
-	}
-	node = newhead.linkParent;
-	while (node)
-	{
-		if (node.linkHead == newhead)
-			return;
-		const nextNode = node.linkParent;
-		linkDots(node, newhead, true);
-		node = nextNode;
-	}
-}
-
-function updateSelDot()
-{
-	if (selDot.inGel)
-	{
-		selDot.x += (mouseX - (selDot.x - selDot.radius)) * .1;
-		selDot.y += (mouseY - (selDot.y - selDot.radius)) * .1;
-	}
-	else
-	{
-		selDot.x = mouseX - selDot.radius;
-		selDot.y = mouseY - selDot.radius;
-	}
-	selDot.style.left = selDot.x + "px";
-	selDot.style.top = selDot.y + "px";
-	selDot.centerX = selDot.x + selDot.radius;
-	selDot.centerY = selDot.y + selDot.radius;
-	selDot.velocityX = 0;
-	selDot.velocityY = 0;
-	let node = selDot;
-	let pullFactor = 1;
-	const visited = new Set();
-	while (node){
-		const parent = node.linkParent;
-		if (parent && !visited.has(parent)) {
-			visited.add(parent);
-			const dx = node.x - parent.x;
-			const dy = node.y - parent.y;
-			parent.x += dx * pullFactor;
-			parent.y += dy * pullFactor;
-			node = parent;
-			pullFactor *= 0.5;
-		}else{
-			node.x += pullFactor * 0.5;
-			node.y += pullFactor * 0.5;
-			break;
-		}
-	}
-}
-
-function updateDot(dot, i)
-{
-	dot.centerX = dot.x + dot.radius;
-	dot.centerY = dot.y + dot.radius;
-	if (!dot.linkChild && !dot.linkParent && dot.linkLine)
-		deleteDotLinks(dot);
-	if (dot == selDot)
-	{
-		if (dot.linkParent)
-			updateLink(dot);
-		return;
-	}
-	if (dot.linkParent)
-	{
-		if (stickStiff <= 0)
-		{
-			if (dot.linkLine)
-				dot.linkLine.remove();
-			dot.linkParent = null;
-		}
-		if (stickStiff == 1)
-		{
-			dot.x = dot.linkParent.x + minmax(-5, 5, dot.offsetX);
-			dot.y = dot.linkParent.y + minmax(-5, 5, dot.offsetY);
-			dot.style.left = dot.x + "px";
-			dot.style.top = dot.y + "px";
-			return;
-		}
-	}
-	dot.newX = dot.x + (dot.velocityX * dot.speed * (deltaTime * speed));
-	dot.newY = dot.y + (dot.velocityY * dot.speed * (deltaTime * speed));
-	dot.newCenterX = dot.x + dot.radius;
-	dot.newCenterY = dot.y + dot.radius;
-	dot.lifeTime = time - dot.startTime;
-	if (dot.isLinkHead) {
-		const baseAngle = Math.atan2(dot.velocityY, dot.velocityX);
-		const timeFactor = time * 0.001;
-		const wave = Math.sin(timeFactor + dot.id * 2) * 0.05; // Amplitude réduite
-		const wiggle = (Math.random() - 0.5) * 0.01;
-		dot.angle = baseAngle + wave + wiggle;
-		const speed = Math.sqrt(dot.velocityX ** 2 + dot.velocityY ** 2) || 0.5;
-		dot.velocityX = Math.cos(dot.angle) * speed;
-		dot.velocityY = Math.sin(dot.angle) * speed;
-		const margin = 80;
-		const repelStrength = 1;
-		if (dot.newX < margin)
-			dot.velocityX += repelStrength * (1 - dot.x / margin);
-		else if (dot.newX > window.innerWidth - margin)
-			dot.velocityX -= repelStrength * (1 - (window.innerWidth - dot.x) / margin);
-		if (dot.newY < margin)
-			dot.velocityY += repelStrength * (1 - dot.y / margin);
-		else if (dot.newY > window.innerHeight - margin)
-			dot.velocityY -= repelStrength * (1 - (window.innerHeight - dot.y) / margin);
-	}
-	// else if (!dot.shape)
-	{
-		dot.velocityY += yGravity * (deltaTime * speed);
-		dot.velocityX += xGravity * (deltaTime * speed);
-	}
-	dot.velocityX *= 1 - xDrag * (deltaTime * speed);
-	dot.velocityY *= 1 - yDrag * (deltaTime * speed);
-	if (Math.abs(dot.velocityX) < 0.01) dot.velocityX = 0;
-	if (Math.abs(dot.velocityY) < 0.01) dot.velocityY = 0;
-	updateBorderCollision(dot);
-	update_self_collisions(dot, i);
-	update_box_collisions(dot);
-	dot.x = dot.newX;
-	dot.y = dot.newY;
-	dot.style.left = dot.x + "px";
-	dot.style.top = dot.y + "px";
-	if (dot.linkParent)
-		updateLink(dot, dot.linkParent);
-}
-
-function updateDots(dots) {
-	if (selDot)
-		updateSelDot();
-	for (let i = 0; i < dots.length; i++)
-		updateDot(dots[i], i);
-	dots_destroyed.forEach(d => {
-		if (typeof d.onRemove === "function") d.onRemove();
-		d.remove();
-		dots.splice(dots.indexOf(d), 1);
-	});
-	dots_destroyed = [];
-}
-
 function updateShape(shape)
 {
 	shape.velocityX += xGravity * deltaTime * speed;
@@ -278,31 +9,69 @@ function updateShape(shape)
 
 function updateShapes()
 {
+	if (mouseStopped && selDot && selDot.shape)
+		au.playRandomSound(au.stretchSounds, .1);
 	for (const sh of shapes)
 		updateShape(sh);
+	if (curShape && mousePressed)
+	{
+		addToShape(curShape, mouseX, mouseY);
+		if (curShape.dots.length > 10)
+		{
+			curShape.last = curShape.dots[curShape.dots.length - 1];
+			curShape = null;
+			mousePressed = false;
+		}
+	}
 }
 
-let lastTime = performance.now();
+function updateMenu()
+{
+	console.warn("in menu");
+		return true;
+}
+
+function updateFallingDots(now)
+{
+	const maxAllowed = 1000;
+	if (menuBlock.started && menuBlock.active && dots.length < maxAllowed && now - menuDropTime > menuDropRate)
+	{
+		const size = 20 + Math.floor(now * .5);
+		const newDot = getDot(menuDropX, 0, size, Math.PI / 2 + r_range(-0.001, 0.001));
+		newDot.auIndex = (dots.length - 1) % 12;
+		dots.push(newDot);
+		menuDropX += (size + 1) * menuDropDir;
+		if (menuDropX > window.innerWidth - size || menuDropX < size)
+		{
+			menuDropDir *= -1;
+			menuDropX += 0;
+			menuDropX += (size + 1) * menuDropDir;
+		}
+		menuDropTime = now;
+	}
+}
+
+let now = performance.now() / 1000;
 function update()
 {
 	time = Date.now();
-	const now = performance.now() / 1000;
-	deltaTime = (now - lastTime) / 1000;
-	lastTime = now;
-	updateDots(dots);
+	const newNow = performance.now() / 1000;
+	deltaTime = (newNow - now) / 1000;
+	now = newNow;
+	au.update(now);
+	if (isPaused) { requestAnimationFrame(update); return; }
+	updateFallingDots(now);
+	updateBoxes();
+	updateDots();
 	requestAnimationFrame(update);
 	updateShapes();
-	if (curShape && mousePressed)
-		addToShape(curShape, mouseX, mouseY);
-	else if (now - dropTime > rate && (keys[" "] || (mousePressed && (keys["Shift"] || boxType == "box_none"))) && !isDraggingControls && !curBox && !selBox && !selDot) {
+	if (!isDraggingControls && !curBox && !selBox && !selDot && !curShape && now - dropTime > rate && (keys[" "] || (mousePressed && (keys["Shift"] || boxType == "None")))) {
 		initDots(dots, mouseX, mouseY);
 		dropTime = now;
 	}
-	au.update();
-	const ctrl_header = document.getElementById("controlsHeader")
-	if (ctrl_header)
-		ctrl_header.textContent = "CONTROLS";
 	const ctrl = document.getElementById("controllLabel");
-	if (ctrl)
-		ctrl.textContent = "Dots: " + dots.length + "/ " + maxDots + " auQueue: " + au.audioQueue.length;
+	ctrl.textContent = "Dots: " + dots.length + "/ " + maxDots + " auQueue: " + au.audioQueue.length + "\n";
+	if (mouseStopped && selDot && selDot.shape)
+		au.playRandomSound(au.stretchSounds, .1);
+	mouseStopped = false;
 }

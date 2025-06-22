@@ -1,0 +1,124 @@
+#controls {
+	position: fixed;
+	top: 20px;
+	left: 20px;
+	background: rgb(255, 255, 255);
+	border-radius: 12px;
+	padding: 0px;
+	font-family: "Segoe UI", Roboto, sans-serif;
+	font-size: 14px;
+	color: white;
+	z-index: 1000;
+	transition: height 0.2s ease, opacity 0.5s ease;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+	will-change: left, top
+}
+
+#controls label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #f0f0f0;
+}
+
+#controls input[type="range"] {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  transition: background 0.3s;
+  margin-bottom: 12px;
+}
+
+#controls input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+}
+
+#controls input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+#controls button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  width: 100%;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.boxButton
+{
+	cursor : pointer;
+	width: 60px;
+	box-sizing: border-box;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	margin: 0px 0;
+	text-align: center;
+	border-radius: 4px;
+	color: white;
+	top: 100%;
+	animation: none;
+	user-select: none;
+	transition: background-color 0.2s;
+	position: absolute;
+}
+
+.boxButton:hover
+{
+	transform: scale(1.1);
+}
+
+#controls button:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.02);
+}
+
+#controls span {
+  font-weight: bold;
+  color: #ffd;
+}
+
+#controls.minimized {
+	height: auto;
+	padding: 0;
+	border: none;
+}
+
+#controls.minimized .control-content {
+	display: none;
+}
+
+#controlsHeader {
+  font-weight: bold;
+  padding: 10px 40%;
+  width: 350px;
+  background-color: rgba(17, 17, 17, 0.1);
+  color: #111;
+  cursor: pointer;
+  user-select: none;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  box-sizing: border-box;
+}
+
+.control-content {
+	padding: 16px;
+}

@@ -24,7 +24,7 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, sh
 	dot.style.width = size + "px";
 	dot.style.height = size + "px";
 	dot.angle = angle;
-	dot.speed = 1 + Math.random() * 2;
+	dot.speed = 1;
 	dot.velocityX = Math.cos(dot.angle) * dot.speed;
 	dot.velocityY = Math.sin(dot.angle) * dot.speed;
 	dot.style.backgroundColor = `rgb(${r_range(0, 255)}, ${r_range(0, 255)}, ${r_range(0, 255)})`;
@@ -37,6 +37,7 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, sh
 	dot.onRemove = function () {
 		createDotImpact(dot);
 		au.playGelSound(dot);
+		console.warn("calling on remove");
 		if (dot.linkLine)
 			deleteDotLinks(dot);
 	};
@@ -57,14 +58,17 @@ function initDots(list, startX, startY)
 	let angle = Math.PI;
 	let isInBox = false;
 	boxes.forEach(b => {
-		if (boxesOverlap(b.x, b.y, b.width, b.height, startX, startY, 1, 1))
+		if (elementsOverlap(b.x, b.y, b.width, b.height, startX, startY, 1, 1))
 			isInBox = true;
 	});
 	const overdraw = (list.length + amount) - maxDots;
 	if (overdraw > 0)
 	{
 		for (let i = 0; i < overdraw; i++)
+		{
+			dots[i].onRemove();
 			dots[i].remove();
+		}
 		dots.splice(0, overdraw);
 	}
 	for (let i = 0; i < amount; i++)
@@ -86,14 +90,20 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 	box.y = y;
 	box.style.left = x + "px";
 	box.style.top = y + "px";
+	box.screws = [];
 	box.width = width;
+	box.angle = 0;
+	box.connectedBoxes = [];
 	box.height = height;
+	box.tranf
+	addRotator(box);
 	box.active = false;
+	box.velocityX = 0;
+	box.velocityY = 0;
 	box.style.display = "block";
-	box.style.cursor = "grab";
 	box.style.width = width + "px";
 	box.style.height = height + "px";
-	if (type == "box_teleport") {
+	if (type == "Teleport") {
 		let newClr;
 		if (!tpa) { newClr = "green"; tpa = box;}
 		else if (!tpb){ tpb = box; newClr = "red";}
@@ -104,11 +114,15 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 	}
 	box.onRemove = function ()
 	{
+		box.connectedBoxes.forEach(b => {
+			b.connectedBoxes.splice(b.connectedBoxes.indexOf(box));
+			b.screws.forEach(s => { if (s.other == box) s.remove(); });
+		});
 		if (box === tpa) tpa = null;
 		else if (box === tpb) tpb = null;
 	};
 	document.body.appendChild(box);
-	if (box.className == "box_vortex")
+	if (box.type == "Vortex")
 	{
 		const circle = document.createElement("div");
 		circle.className = "dot";
@@ -122,15 +136,20 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 		if (selBox || selDot || isResizing)
 			return;
 		e.preventDefault();
+		if (prvBox)
+			prvBox.style.zIndex = 100;
+		box.style.zIndex = 101;
 		selBox = box;
 	});
+	box.addEventListener("mouseup", (e) => {
+		prvBox = box;
+	});
+	box.addEventListener("mousemove", () => {
+		document.body.style.cursor = selBox ? "grab" : "pointer";});
+	box.addEventListener("mouseleave", () => {
+	document.body.style.cursor = "default";});
 	return box;
 }
-
-window.onload = () => {
-	initUi();
-	update();
-};
 
 function initShape(x, y)
 {
@@ -148,13 +167,14 @@ function initShape(x, y)
 	document.body.appendChild(newShape);
 	newShape.first = addToShape(newShape, x, y, true);
 	shapes.push(newShape);
+	au.playRandomSound(au.stretchSounds, .1);
 	return newShape;
 }
 
 function addToShape(shape, x, y, isFirst = false, closeShape = false)
 {
 	const firstDot = shape.dots[0];
-	let isLast = closeShape ? true : firstDot && shape.dots.length > 5 && (Math.abs(x - firstDot.x) < 10 && Math.abs(y - firstDot.y) < 10);
+	let isLast = closeShape ? true : firstDot && shape.dots.length > 30 && (Math.abs(x - firstDot.x) < 10 && Math.abs(y - firstDot.y) < 10);
 	if (isLast && !closeShape)
 		mousePressed = false;
 	const prevDot = isFirst ? null : isLast ? firstDot : shape.dots[shape.dots.length - 1];
@@ -203,3 +223,12 @@ function addLinkLine(child, parent)
 	document.body.appendChild(line);
 	return line;
 }
+
+window.onload = () => {
+	au = new AudioManager();
+	au.active = false;
+	au.canPlay = false;
+	setTimeout(() => { au.active = true; au.canPlay = true;}, 300);
+	initUi();
+	update();
+};

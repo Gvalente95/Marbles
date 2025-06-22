@@ -1,13 +1,12 @@
-au = new AudioManager();
 params = {
 amount: 5,
 rate: .05,
 speed: 40000,
 yGravity: 0.5,
 xGravity: 0,
-xDrag: 0.01,
+xDrag: 0.07,
 yDrag: 0,
-bounceFactor: 0.3,
+bounceFactor: .2,
 stickStiff: .05,
 minSize: 2,
 maxSize: 50,
@@ -36,8 +35,10 @@ musicMode,
 
 time = 0;
 dots = [];
+menuDots = [];
 dots_destroyed = [];
 boxes = [];
+prvBox = null;
 dropTime = 0;
 curBox = null;
 keys = {};
@@ -57,3 +58,8 @@ tpa = null, tpb = null;
 curShape = null;
 shapes = [];
 lineSpeed = 2;
+menuBlock = null;
+menuDropRate = .001;
+menuDropTime = 0;
+menuDropX = 0;
+menuDropDir = 1;

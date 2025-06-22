@@ -10,14 +10,10 @@ addEventListener('mousedown', (event) => {
 	if (!curShape && keys["Shift"])
 		curShape = initShape(mouseX, mouseY);
 	if (!selBox && !curBox && !curShape)
-	{
 		selDot = getDotAtPos(mouseX, mouseY, 100);
-		// if (selDot && selDot.linkLine && !selDot.shape)
-		// 	setNewLinkHead(selDot);
-	}
 	if (!curBox && !selBox && !selDot && !curShape)
 	{
-		if (boxType == "box_teleport" && (tpa || tpb))
+		if (boxType == "Teleport" && (tpa || tpb))
 		{
 			if (tpa && tpb)
 			{
@@ -29,7 +25,7 @@ addEventListener('mousedown', (event) => {
 			boxes.push(curBox);
 			curBox = null;
 		}
-		else if (boxType != "box_none")
+		else if (boxType != "None")
 			curBox = init_box(mouseX, mouseY);
 	}
 	dropTime = 0;
@@ -55,33 +51,44 @@ addEventListener('mouseup', (event) => {
 		{
 			boxes.push(curBox);
 			curBox.x = parseInt(curBox.style.left);
-			curBox.y = parseInt(curBox.style.top);	
+			curBox.y = parseInt(curBox.style.top);
 		}
 		curBox = null;
 	}
 	if (selBox)
+	{
+		setVelocity(selBox, mouseDX * .5, mouseDY * .5);
 		selBox = null;
+	}
 	if (selDot)
 	{
-		selDot.velocityX = mouseDX;
-		selDot.velocityY = mouseDY;
+		if (!selDot.shape)
+		{
+			selDot.velocityX = mouseDX;
+			selDot.velocityY = mouseDY;
+		}
 		selDot = null;
 	}
 });
 
+let mouseStopped = false;
+let mouseStopTimeout;
 addEventListener('mousemove', (event) => {
 	mouseDX = event.clientX - mouseX;
 	mouseDY = event.clientY - mouseY;
 	mouseX = event.clientX;
 	mouseY = event.clientY;
 
-	if (selBox)
+	mouseStopped = false;
+	clearTimeout(mouseStopTimeout);
+	mouseStopTimeout = setTimeout(() => { mouseStopped = true;}, 20);
+	if (selBox && !rotating)
 	{
+		selBox.velocityX = 0;
+		selBox.velocityY = 0;
+		setBoxPos(selBox, minmax(0, window.innerWidth - selBox.width, selBox.x + mouseDX), minmax(0, window.innerHeight - selBox.height, selBox.y + mouseDY));
+		selBox.connectedBoxes.forEach(cb => {if (cb != selBox) moveElement(cb, cb.x + mouseDX, cb.y + mouseDY);});
 		document.body.style.cursor = "grab";
-		selBox.x += mouseDX;
-		selBox.y += mouseDY;
-		selBox.style.left = selBox.x + "px";
-		selBox.style.top = selBox.y + "px";
 	}
 	if (curBox)
 	{
@@ -96,7 +103,7 @@ addEventListener('mousemove', (event) => {
 		const top = Math.min(y1, y2);
 		let width = Math.abs(x2 - x1);
 		let height = Math.abs(y2 - y1);
-		if (curBox.className == "box_vortex")
+		if (curBox.className == "Vortex")
 		{
 			if (width > height) height = width * r_range(.95, 1.05);
 			else width = height * r_range(.95, 1.05);
@@ -117,6 +124,8 @@ function deleteDot(dot)
 
 addEventListener('keydown', (e) => {
 	keys[e.key] = true;
+	if (menuBlock.active || e.key == "e")
+		switchMenuMode();
 	if (e.key === "Backspace")
 	{
 		const dot = getDotAtPos(mouseX, mouseY, 80);
@@ -140,10 +149,8 @@ addEventListener('keydown', (e) => {
 		toggle_minimize_controls();
 	}
 	else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-		boxButtons[activeBoxIndex].style.backgroundColor = "rgba(0, 0, 0, 0.1)";
-		activeBoxIndex = (activeBoxIndex + (e.key === "ArrowLeft" ? -1 : 1) + boxButtons.length) % boxButtons.length;
-		boxButtons[activeBoxIndex].style.backgroundColor = "rgba(0, 255, 0, .8)";
-		boxType = boxButtons[activeBoxIndex].className;
+		let newIndex = (activeBoxIndex + (e.key === "ArrowLeft" ? -1 : 1) + boxButtons.length) % boxButtons.length;
+		switchBoxButton(newIndex)
 		au.playSound(au.click);
 	}
 });
@@ -205,28 +212,16 @@ window.addEventListener("wheel", (event) =>
 let prevSpd;
 let prevGravX;
 let prevGravY;
+let isPaused = false;
 window.addEventListener("blur", () => {
-	prevSpd = speed;
-	speed = 0;
-	prevGravX = xGravity;
-	prevGravY = yGravity;
-	xGravity = 0;
-	yGravity = 0;
+	hasInteracted = false;
+	isPaused = true;
 });
 
 window.addEventListener("focus", () => {
+	isPaused = false;
+	au.active = false;
 	setTimeout(() => {
-		speed = prevSpd;
-		xGravity = prevGravX;
-		yGravity = prevGravY;	
-	}, 50)
-	dots.forEach(d => {
-		d.velocityX = 0;
-		d.velocityY = 0;
-	});
-});
-
-window.addEventListener("gesturechange", (e) => {
-	console.log("Rotation:", e.rotation); // in degrees
-	console.log("Scale:", e.scale);
+		au.active = true;
+	}, 5000);
 });
