@@ -352,7 +352,6 @@ function initButtons(contentWrapper, controls)
 	contentWrapper.appendChild(setButton);
 	const boxNames = ["Concrete", "Gelatine", "Magnetite", "Vortex", "Teleport", "None"];
 
-	const rect = contentWrapper.getBoundingClientRect();
 	for (let i = 0; i < 6; i++) {
 		const boxButton = document.createElement("div");
 		boxButton.type = boxNames[i];
@@ -447,5 +446,6 @@ function initUi()
 	switchMenuMode(true, true);
 	switchMenuPage(0, true);
 	switchBoxButton(0);
+	switchBoxButton(1);
 	moveControls(controls, 25, 40);
 }
