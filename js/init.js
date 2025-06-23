@@ -228,10 +228,18 @@ window.onload = () => {
 	au = new AudioManager();
 	au.active = false;
 	au.canPlay = false;
-	isMobile = window.innerWidth < 756;
+	isMobile = isMobileDevice();
 	if (isMobile)
+	{
 		maxDots = 100;
+		selfCollision = false;
+		au.active = false;
+	}
 	setTimeout(() => { au.active = true; au.canPlay = true;}, 300);
 	initUi();
 	update();
 };
+
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
