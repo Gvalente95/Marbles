@@ -39,7 +39,6 @@ function updateFallingDots(now)
 		const size = 20 + Math.floor(now * .5);
 		const newDot = getDot(menuDropX, 0, size, Math.PI / 2 + r_range(-0.001, 0.001));
 		newDot.auIndex = (dots.length - 1) % 12;
-		dots.push(newDot);
 		menuDropX += (size + 1) * menuDropDir;
 		if (menuDropX > window.innerWidth - size || menuDropX < size)
 		{

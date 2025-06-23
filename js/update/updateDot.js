@@ -60,7 +60,7 @@ function updateDot(dot, i)
 	dot.newY = dot.y + (dot.velocityY * dot.speed * (deltaTime * speed));
 	dot.newCenterX = dot.x + dot.radius;
 	dot.newCenterY = dot.y + dot.radius;
-	dot.lifeTime = time - dot.startTime;
+	dot.lifetime = time - dot.startTime;
 	if (dot.isLinkHead) {
 		const baseAngle = Math.atan2(dot.velocityY, dot.velocityX);
 		const timeFactor = time * 0.001;
@@ -99,15 +99,15 @@ function updateDots() {
 	if (selDot)
 		updateSelDot();
 	for (let i = 0; i < dots.length; i++)
-		updateDot(dots[i], i);
-	for (let i = 0;  i < dots_destroyed.length; i++)
 	{
-		const d = dots_destroyed[i];
-		d.onRemove();
-		d.remove();
-		dots.splice(dots.indexOf(d), 1);
+		if (!dots[i].active)
+			break;
+		updateDot(dots[i], i);
 	}
+	for (let i = 0;  i < dots_destroyed.length; i++)
+		deleteDot(dots_destroyed[i]);
 	dots_destroyed = [];
+	dots.sort((a, b) => b.active - a.active);
 }
 
 
@@ -119,11 +119,11 @@ function getDotAtPos(x, y, radius = 20, list = dots, shape_index = 0) {
 	let closestDiff = Infinity;
 	for (let i = 0; i < list.length; i++) {
 		const d = list[i];
+		if (!d.active) break;
 		if (!elementsOverlap(d.x, d.y, d.size, d.size, x, y, radius, radius))
 			continue;
 		let diff = Math.abs(x - d.x) + Math.abs(y - d.y);
-		if (diff > closestDiff)
-			continue;
+		if (diff > closestDiff) continue;
 		closestDiff = diff;
 		closest = d;
 	}

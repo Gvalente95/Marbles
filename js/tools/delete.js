@@ -1,12 +1,25 @@
-function deleteDots()
-{
-	for (const d of dots)
-	{
-		if (typeof d.onRemove === "function") d.onRemove();
-		d.remove();
+function deleteDots() {
+	const toDelete = [];
+	for (let i = 0; i < dots.length; i++) {
+		if (!dots[i].active) break;
+		toDelete.push(dots[i]);
 	}
+	for (const d of toDelete)
+		deleteDot(d);
 	linkHeads = [];
-	dots = [];
+}
+
+function deleteDot(d) {
+	if (!d.active)
+		return;
+	if (typeof d.onRemove === "function") d.onRemove();
+	d.style.display = "none";
+	d.active = false;
+	const i = dots.indexOf(d);
+	if (i !== -1) {
+		dots.splice(i, 1);
+		dots.push(d);
+	}
 }
 
 function deleteBoxes() {

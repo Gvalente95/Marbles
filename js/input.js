@@ -117,11 +117,6 @@ addEventListener('mousemove', (event) => {
 	}
 });
 
-function deleteDot(dot)
-{
-	dots_destroyed.push(dot);
-}
-
 document.addEventListener("dblclick", () => {
 	removeAtPos(mouseX, mouseY);
 });

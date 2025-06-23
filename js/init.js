@@ -1,6 +1,20 @@
 function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, shape = null)
 {
-	const dot = document.createElement("div");
+	let dot = getDotFromPool();
+	const isNew = (dot == null);
+	if (isNew)
+	{
+		dot = document.createElement("div");
+		document.body.appendChild(dot);
+		dots.push(dot);
+		dot.onRemove = function () {
+			createDotImpact(dot);
+			au.playGelSound(dot);
+			if (dot.linkLine)
+				deleteDotLinks(dot);
+		};
+	}
+	dot.active = true;
 	dot.className = "dot";
 	dot.x = x;
 	dot.y = y;
@@ -32,15 +46,7 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, sh
 	dot.style.left = dot.x + "px";
 	dot.inGel = false;
 	dot.style.top = dot.y + "px";
-	dot.onmouseenter = function () {
-	};
-	dot.onRemove = function () {
-		createDotImpact(dot);
-		au.playGelSound(dot);
-		console.warn("calling on remove");
-		if (dot.linkLine)
-			deleteDotLinks(dot);
-	};
+	dot.style.display = "block";
 	const sizeGroup = dot.size <= 50 / 3 ? 0 : dot.size <= 50 * 2 / 3 ? 1 : 2;
 	const groupIndex = (sizeGroup * 4) + Math.floor(r_range(0, 4));
 	dot.auIndex = Math.min(au.bells.length - 1, au.bells.length - 1 - groupIndex);
@@ -48,36 +54,41 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, sh
 		au.playGelSound(dot);
 	else
 		au.playMarbleSound(dot, 3, true);
-	document.body.appendChild(dot);
 	return dot;
 }
 
-function initDots(list, startX, startY)
-{
+function getDotFromPool() {
+	for (let i = dots.length - 1; i >= 0; i--)
+		if (!dots[i].active)
+			return dots[i];
+	return null;
+}
+
+function initDots(list, startX, startY) {
 	const step = (Math.PI * 2) / amount;
 	let angle = Math.PI;
 	let isInBox = false;
-	boxes.forEach(b => {
-		if (elementsOverlap(b.x, b.y, b.width, b.height, startX, startY, 1, 1))
+
+	for (const b of boxes) {
+		if (elementsOverlap(b.x, b.y, b.width, b.height, startX, startY, 1, 1)) {
 			isInBox = true;
-	});
-	const overdraw = (list.length + amount) - maxDots;
-	if (overdraw > 0)
-	{
-		for (let i = 0; i < overdraw; i++)
-		{
-			dots[i].onRemove();
-			dots[i].remove();
+			break;
 		}
-		dots.splice(0, overdraw);
 	}
-	for (let i = 0; i < amount; i++)
-	{
+
+	if (list === dots) {
+		const overdraw = (dots.length + amount) - maxDots;
+		for (let i = 0; i < overdraw; i++) {
+			deleteDot(dots[i]);
+		}
+	}
+
+	for (let i = 0; i < amount; i++) {
 		const size = r_range(minSize, maxSize);
 		const radius = size;
 		const offsetX = Math.cos(angle) * radius;
 		const offsetY = Math.sin(angle) * radius;
-		list.push(getDot(startX + offsetX, startY + offsetY, size, angle, isInBox));
+		const dot = getDot(startX + offsetX, startY + offsetY, size, angle, isInBox);
 		angle += step;
 	}
 }
@@ -186,6 +197,7 @@ function addToShape(shape, x, y, isFirst = false, closeShape = false)
 	newDot.style.position = "absolute";
 	newDot.linkChild = null;
 	newDot.style.display = "none";
+	
 	shape.appendChild(newDot);
 	shape.dots.push(newDot);
 	if (!prevDot)

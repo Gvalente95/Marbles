@@ -135,9 +135,8 @@ function breakDot(dot, box)
 	const revAngle = getRevAngle(dot.angle);
 	const dotX = minmax(marge, window.innerWidth - marge, dot.x);
 	const dotY = minmax(marge, window.innerHeight - marge, dot.y);
-	const newDot = getDot(dotX, dotY, dot.size / 2, revAngle);
+	let newDot = getDot(dotX, dotY, dot.size / 2, revAngle);
 	deleteDot(dot);
-	dots.push(newDot);
 }
 
 function teleportDot(dot, boxA, boxB, boxACenterX, boxACenterY)
@@ -296,6 +295,7 @@ function update_self_collisions(dot, i, list = dots, shapeIndex = 0)
 	let hasCollisions = false;
 	for (let j = i + 1; j < list.length; j++) {
 		const other = list[j];
+		if (!other.active) break;
 		if (other == dot) continue;
 		const dx = dot.newX - other.x;
 		const dy = dot.newY - other.y;
