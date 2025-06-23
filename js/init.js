@@ -228,6 +228,7 @@ window.onload = () => {
 	au = new AudioManager();
 	au.active = false;
 	au.canPlay = false;
+	isMobile = window.innerWidth < 756;
 	setTimeout(() => { au.active = true; au.canPlay = true;}, 300);
 	initUi();
 	update();

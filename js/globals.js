@@ -63,4 +63,4 @@ menuDropRate = .001;
 menuDropTime = 0;
 menuDropX = 0;
 menuDropDir = 1;
-isMobile = window.innerWidth < 756;
+isMobile = false;
