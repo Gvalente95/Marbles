@@ -418,8 +418,12 @@ function initUi()
 	const controls = document.getElementById("controls");
 	controls.addEventListener("mouseenter", () => { controls.style.opacity = "1"; });
 	controls.addEventListener("mouseleave", () => { if (!minimize) return; controls.style.opacity = ".5"; });
-	if (isMobile)
-		controls.style.width = (window.innerWidth / 2) + "px";
+	if (isMobile || 1)
+	{
+		controls.style.width = (window.innerWidth - 20) + "px";
+		controls.style.left = "0px";
+		controls.style.fontSize = "40px";
+	}
 	initDragControls(controls);
 	addResizer(controls, "left", null, 300, 600);
 	addResizer(controls, "right", null, 300, 600);
@@ -448,5 +452,5 @@ function initUi()
 	switchMenuPage(0, true);
 	switchBoxButton(0);
 	switchBoxButton(1);
-	moveControls(controls, 25, 40);
+	// moveControls(controls, 25, 40);
 }
