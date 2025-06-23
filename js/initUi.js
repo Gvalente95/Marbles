@@ -432,6 +432,7 @@ function initUi()
 	const header = document.createElement("div");
 	header.id = "controlsHeader";
 	header.textContent = "SETTINGS";
+	header.style.width = controls.style.width;
 	header.onclick = () => toggle_minimize_controls();
 	controls.appendChild(header);
 	controls.header = header;

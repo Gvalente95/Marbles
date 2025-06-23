@@ -54,8 +54,6 @@ function updateFallingDots(now)
 let now = performance.now() / 1000;
 function update()
 {
-	if (isMobile)
-		return;
 	time = Date.now();
 	const newNow = performance.now() / 1000;
 	deltaTime = (newNow - now) / 1000;
