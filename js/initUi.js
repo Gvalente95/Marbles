@@ -418,6 +418,8 @@ function initUi()
 	const controls = document.getElementById("controls");
 	controls.addEventListener("mouseenter", () => { controls.style.opacity = "1"; });
 	controls.addEventListener("mouseleave", () => { if (!minimize) return; controls.style.opacity = ".5"; });
+	if (isMobile)
+		controls.style.width = (window.innerWidth / 2) + "px";
 	initDragControls(controls);
 	addResizer(controls, "left", null, 300, 600);
 	addResizer(controls, "right", null, 300, 600);

@@ -159,47 +159,6 @@ addEventListener('keyup', (e) => {
 	keys[e.key] = false;
 });
 
-addEventListener('touchstart', (event) => {
-	const touch = event.touches[0];
-	mouseX = touch.clientX;
-	mouseY = touch.clientY;
-	mousePressed = true;
-	if (keys["shift"] && !curBox)
-		curBox = init_box(mouseX, mouseY);
-}, { passive: false });
-
-addEventListener('touchend', () => {
-	mousePressed = false;
-	if (curBox) {
-		boxes.push(curBox);
-		curBox = null;
-	}
-}, { passive: false });
-
-addEventListener('touchmove', (event) => {
-	const touch = event.touches[0];
-	mouseX = touch.clientX;
-	mouseY = touch.clientY;
-	event.preventDefault();
-	if (!curBox) return;
-
-	let x1 = curBox.x;
-	let y1 = curBox.y;
-	let x2 = mouseX;
-	let y2 = mouseY;
-
-	const left = Math.min(x1, x2);
-	const top = Math.min(y1, y2);
-	const width = Math.abs(x2 - x1);
-	const height = Math.abs(y2 - y1);
-	curBox.style.left = left + "px";
-	curBox.style.top = top + "px";
-	curBox.width = width;
-	curBox.height = height;
-	curBox.style.width = width + "px";
-	curBox.style.height = height + "px";
-}, { passive: false });
-
 window.addEventListener("wheel", (event) =>
 {
 	dots.forEach(dot =>
@@ -225,3 +184,21 @@ window.addEventListener("focus", () => {
 		au.active = true;
 	}, 5000);
 });
+
+function simulateMouseEvent(touchEvent, mouseEventType) {
+    const touch = touchEvent.changedTouches[0];
+    const simulatedEvent = new MouseEvent(mouseEventType, {
+        bubbles: true,
+        cancelable: true,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        screenX: touch.screenX,
+        screenY: touch.screenY,
+        button: 0
+    });
+    touch.target.dispatchEvent(simulatedEvent);
+}
+
+document.addEventListener("touchstart", e => simulateMouseEvent(e, "mousedown"), true);
+document.addEventListener("touchmove",  e => simulateMouseEvent(e, "mousemove"), true);
+document.addEventListener("touchend",   e => simulateMouseEvent(e, "mouseup"),   true);
