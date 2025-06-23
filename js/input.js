@@ -122,23 +122,30 @@ function deleteDot(dot)
 	dots_destroyed.push(dot);
 }
 
+document.addEventListener("dblclick", () => {
+	removeAtPos(mouseX, mouseY);
+});
+
+function removeAtPos(x, y)
+{
+	const dot = getDotAtPos(x, y, 80);
+	const box = getBoxAtPos(x, y, 20);
+	if (dot)
+		deleteDot(dot);
+	else if (box)
+	{
+		if (typeof box.onRemove === "function") box.onRemove();
+		boxes.splice(boxes.indexOf(box), 1);
+		box.remove();
+	}
+}
+
 addEventListener('keydown', (e) => {
 	keys[e.key] = true;
 	if (menuBlock.active || e.key == "e")
 		switchMenuMode();
 	if (e.key === "Backspace")
-	{
-		const dot = getDotAtPos(mouseX, mouseY, 80);
-		const box = getBoxAtPos(mouseX, mouseY, 20);
-		if (dot)
-			deleteDot(dot);
-		else if (box)
-		{
-			if (typeof box.onRemove === "function") box.onRemove();
-			boxes.splice(boxes.indexOf(box), 1);
-			box.remove();
-		}
-	}
+		removeAtPos(mouseX, mouseY);
 	else if (e.key === "x")
 		deleteDots();
 	else if (e.key === "b")
@@ -199,6 +206,36 @@ function simulateMouseEvent(touchEvent, mouseEventType) {
     touch.target.dispatchEvent(simulatedEvent);
 }
 
-document.addEventListener("touchstart", e => simulateMouseEvent(e, "mousedown"), true);
-document.addEventListener("touchmove",  e => simulateMouseEvent(e, "mousemove"), true);
-document.addEventListener("touchend",   e => simulateMouseEvent(e, "mouseup"),   true);
+
+function simulateMouseEvent(touchEvent, mouseType) {
+	const touch = touchEvent.changedTouches[0];
+	const simulatedEvent = new MouseEvent(mouseType, {
+		bubbles: true,
+		cancelable: true,
+		clientX: touch.clientX,
+		clientY: touch.clientY,
+		button: 0
+	});
+	touch.target.dispatchEvent(simulatedEvent);
+}
+
+let lastTouchTime = 0;
+let isDoubleTouch = false;
+document.addEventListener("touchstart", e => {
+	const now = Date.now();
+	if (now - lastTouchTime < 300) {
+		isDoubleTouch = true;
+		removeAtPos(mouseX, mouseY);
+		console.log("Double touch!");}
+	lastTouchTime = now;
+	simulateMouseEvent(e, "mousedown");
+}, { passive: false });
+
+document.addEventListener("touchmove", e => {
+	simulateMouseEvent(e, "mousemove");
+}, { passive: false });
+
+document.addEventListener("touchend", e => {
+	simulateMouseEvent(e, "mouseup");
+	isDoubleTouch = false;
+}, { passive: false });
