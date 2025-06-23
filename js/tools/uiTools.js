@@ -8,6 +8,7 @@ function moveControls(controls, xCenter, yCenter)
 	const newTop = yCenter - rect.height / 2;
 	controls.style.left = `${newLeft}px`;
 	controls.style.top = `${newTop}px`;
+	controls.style.width = 200 + "px";
 }
 
 function initDragControls(controls)

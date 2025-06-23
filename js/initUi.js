@@ -351,6 +351,8 @@ function initButtons(contentWrapper, controls)
 	contentWrapper.appendChild(setButton);
 	const boxNames = ["Concrete", "Gelatine", "Magnetite", "Vortex", "Teleport", "None"];
 
+	const rect = controls.getBoundingClientRect();
+	const w = (rect.width - 20) / 6;
 	for (let i = 0; i < 6; i++) {
 		const boxButton = document.createElement("div");
 		boxButton.type = boxNames[i];
@@ -360,9 +362,9 @@ function initButtons(contentWrapper, controls)
 		boxButton.style.borderRadius = "0";
 		if (boxButton.textContent === "Teleport")
 			boxButton.style.background = "linear-gradient(to right, rgba(57, 204, 116, 0.3) 50%, rgba(255, 0, 0, 0.33) 50%)";
-		boxButton.style.width = 55 + "px";
+		boxButton.style.width = w + "px";
 		boxButton.style.top = "100%";
-		boxButton.style.left = 10 + (i * 55) + "px";
+		boxButton.style.left = 10 + (i * w) + "px";
 		boxButton.onclick = () => { switchBoxButton(i); };
 		addInfoBox(boxButton, boxNames[i]);
 		boxButtons.push(boxButton);
@@ -418,7 +420,7 @@ function initUi()
 	const controls = document.getElementById("controls");
 	controls.addEventListener("mouseenter", () => { controls.style.opacity = "1"; });
 	controls.addEventListener("mouseleave", () => { if (!minimize) return; controls.style.opacity = ".5"; });
-	if (isMobile || 1)
+	if (isMobile)
 	{
 		controls.style.width = (window.innerWidth - 20) + "px";
 		controls.style.left = "0px";
@@ -452,5 +454,6 @@ function initUi()
 	switchMenuPage(0, true);
 	switchBoxButton(0);
 	switchBoxButton(1);
-	// moveControls(controls, 25, 40);
+	if (!isMobile)
+		moveControls(controls, 25, 40);
 }
