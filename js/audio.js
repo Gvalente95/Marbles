@@ -1,10 +1,10 @@
 const audioPath = "ressources/audio/";
 class AudioManager {
 	constructor() {
-		this.lastPlayTime = Date.now();
+		this.lastPlayTime = 0;
 		this.canPlay = true;
 		this.active = true;
-		this.playInterval = 0.01; // in seconds
+		this.playInterval = ((isMobile) ? .2 : 0.05);
 		this.audioQueue = [];
 		this.buttonOk = new Audio(audioPath + "buttonOk.mp3");
 		this.gameOn = new Audio(audioPath + "gameOn.mp3");
@@ -36,6 +36,7 @@ class AudioManager {
 		let index = r_range(0, list.length - 1);
 		const au = new Audio(list[index].src);
 		au.volume = volume;
+		this.lastPlayTime = now;
 		au.play();
 	}
 
@@ -54,6 +55,7 @@ class AudioManager {
 			au.volume = minmax(.1, 1, velMax / 10);
 		} else
 			au.volume = volume;
+		this.lastPlayTime = now;
 		au.play().catch(e => console.warn("Failed to play:", e));
 	}
 
@@ -68,6 +70,7 @@ class AudioManager {
 		}
 		else
 			au.volume = volume;
+		this.lastPlayTime = now;
 		au.play();
 	}
 
@@ -89,13 +92,13 @@ class AudioManager {
 	update() {
 		this.canPlay = (
 			this.active &&
-			(Date.now() - this.lastPlayTime > this.playInterval * 1000)
+			(now - this.lastPlayTime > this.playInterval)
 		);
 	}
 
 	playSound(sound, volume = 1) {
 		if (!this.canPlay) return;
-		this.lastPlayTime = time;
+		this.lastPlayTime = now;
 		const newAu = new Audio(sound.src);
 		newAu.volume = volume;
 		newAu.play();
@@ -136,6 +139,7 @@ class AudioManager {
 			const idx = this.audioQueue.indexOf(au);
 			if (idx !== -1) this.audioQueue.splice(idx, 1);
 		};
+		this.lastPlayTime = now;
 		au.play();
 	}
 }

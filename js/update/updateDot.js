@@ -110,7 +110,6 @@ function updateDots() {
 	dots.sort((a, b) => b.active - a.active);
 }
 
-
 function getDotAtPos(x, y, radius = 20, list = dots, shape_index = 0) {
 	const sd = selDot;
 	if (sd && elementsOverlap(sd.x, sd.y, sd.size, sd.size, x, y, radius * 10, radius * 10))
