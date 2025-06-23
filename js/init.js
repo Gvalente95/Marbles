@@ -229,10 +229,9 @@ window.onload = () => {
 	au.active = false;
 	au.canPlay = false;
 	isMobile = isMobileDevice();
-	// isMobile = 1;
-	if (isMobile || 1)
+	if (isMobile)
 	{
-		maxDots = 100;
+		maxDots = 50;
 		selfCollision = false;
 		au.active = false;
 	}

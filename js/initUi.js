@@ -243,7 +243,7 @@ function initSliders(contentWrapper)
 	id: "maxSlider",
 	info: "Limits the maximum amount of dots",
 	min: 5,
-	max: 2500,
+	max: isMobile ? 100 : 3000,
 	step: 1,
 	value: params.maxDots,
 	pageIndex: 0,
