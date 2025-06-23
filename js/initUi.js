@@ -10,7 +10,7 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 	button.style.justifyContent = "flex-start";
 	button.style.margin = "4px 0";
 	button.style.padding = "0";
-	button.style.height = "32px";
+	button.style.height = "64px";
 	button.style.width = "100%";
 	button.style.border = "none";
 	button.style.cursor = "pointer";
@@ -27,6 +27,7 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 	const keyDiv = document.createElement("div");
 	keyDiv.textContent = keyBind ? keyBind : "";
 	keyDiv.style.width = 50 + "px";
+	keyDiv.style.fontSize = controls.style.fontSize;
 	keyDiv.style.height = "100%";
 	keyDiv.style.display = "flex";
 	keyDiv.style.alignItems = "center";
@@ -41,6 +42,7 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 	labelDiv.style.height = "100%";
 	labelDiv.style.display = "flex";
 	labelDiv.style.alignItems = "center";
+	labelDiv.style.fontSize = controls.style.fontSize;
 	labelDiv.style.paddingLeft = "64px";
 	labelDiv.pageIndex = pageIndex;
 	button.labelDiv = labelDiv;
@@ -95,6 +97,8 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 	slider.max = max;
 	slider.step = step;
 	slider.value = value;
+	if (isMobile)
+		slider.style.height = "10px";
 	slider.style.flex = "1";
 	slider.style.backgroundColor = "rgba(0, 0, 0, 0.73)";
 	const valueDisplay = document.createElement("span");
@@ -425,7 +429,7 @@ function initUi()
 	{
 		controls.style.width = (window.innerWidth - 20) + "px";
 		controls.style.left = "0px";
-		controls.style.fontSize = "120px";
+		controls.style.fontSize = "40px";
 	}
 	initDragControls(controls);
 	addResizer(controls, "left", null, 300, 600);
