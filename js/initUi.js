@@ -33,7 +33,6 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 	keyDiv.style.justifyContent = "center";
 	keyDiv.style.backgroundColor = "rgba(0,0,0,0.1)";
 	keyDiv.style.color = "black";
-	keyDiv.style.fontSize = "0.85em";
 
 	// Label section (right side)
 	const labelDiv = document.createElement("div");
@@ -424,7 +423,7 @@ function initUi()
 	{
 		controls.style.width = (window.innerWidth - 20) + "px";
 		controls.style.left = "0px";
-		controls.style.fontSize = "40px";
+		controls.style.fontSize = "120px";
 	}
 	initDragControls(controls);
 	addResizer(controls, "left", null, 300, 600);
