@@ -83,7 +83,7 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 
 	const labelSpan = document.createElement("span");
 	labelSpan.textContent = labelText + ":";
-	labelSpan.style.minWidth = "70px";
+	labelSpan.style.minWidth = (isMobile ? 200 : 70) + "px";
 	labelSpan.style.color = "rgba(0, 0, 0, 0.84)";
 	labelSpan.pointerEvents = "block";
 	labelSpan.pageIndex = pageIndex;
@@ -151,29 +151,7 @@ function initSliders(contentWrapper)
 	onChange: (v) => speed = v,
 	})); // speed
 	contentWrapper.appendChild(createSlider({
-	labelText: "minSize",
-	id: "sizeSlider",
-	info: "Minimum size of newly-created dots.",
-	min: 5,
-	max: 200,
-	step: 1,
-	value: params.minSize,
-	pageIndex: 0,
-	onChange: (v) => minSize = v
-	})); // minSize
-	contentWrapper.appendChild(createSlider({
-	labelText: "maxSize",
-	id: "sizeSlider",
-	info: "Maximum size of newly-created dots.",
-	min: 5,
-	max: 200,
-	step: 1,
-	value: params.maxSize,
-	pageIndex: 0,
-	onChange: (v) => maxSize = v
-	})); // maxSize
-	contentWrapper.appendChild(createSlider({
-	labelText: "Stick-Stiffness",
+	labelText: "Stick",
 	id: "stickStiffSlider",
 	info: "Controls how much glue is applied to dots linked together",
 	min: 0,
@@ -184,7 +162,29 @@ function initSliders(contentWrapper)
 	onChange: (v) => stickStiff = v
 	})); // stick
 	contentWrapper.appendChild(createSlider({
-	labelText: "yGravity",
+	labelText: "Size Min",
+	id: "sizeSlider",
+	info: "Minimum size of newly-created dots.",
+	min: 5,
+	max: 200,
+	step: 1,
+	value: params.minSize,
+	pageIndex: 0,
+	onChange: (v) => minSize = v
+	})); // minSize
+	contentWrapper.appendChild(createSlider({
+	labelText: "Size Max",
+	id: "sizeSlider",
+	info: "Maximum size of newly-created dots.",
+	min: 5,
+	max: 200,
+	step: 1,
+	value: params.maxSize,
+	pageIndex: 0,
+	onChange: (v) => maxSize = v
+	})); // maxSize
+	contentWrapper.appendChild(createSlider({
+	labelText: "Gravity Y",
 	id: "yGravitySlider",
 	info: "Vertical gravity modifier",
 	min: -1,
@@ -195,7 +195,7 @@ function initSliders(contentWrapper)
 	onChange: (v) => yGravity = v
 	})); // yGrav
 	contentWrapper.appendChild(createSlider({
-	labelText: "xGravity",
+	labelText: "Gravity X",
 	id: "xGravitySlider",
 	info: "Horizontal gravity modifier",
 	min: -1,
@@ -206,7 +206,7 @@ function initSliders(contentWrapper)
 	onChange: (v) => xGravity = v
 	})); // xGrav
 	contentWrapper.appendChild(createSlider({
-	labelText: "xDrag",
+	labelText: "Drag X",
 	id: "DragSlider",
 	info: "Controls the ammount of horizontal velocity loss due to collisions applied to dots",
 	min: 0,
@@ -217,7 +217,7 @@ function initSliders(contentWrapper)
 	onChange: (v) => xDrag = v
 	})); // xDrag
 	contentWrapper.appendChild(createSlider({
-	labelText: "yDrag",
+	labelText: "Drag Y",
 	id: "DragSlider",
 	info: "Controls the ammount of vertical velocity loss due to collisions applied to dots",
 	min: 0,

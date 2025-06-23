@@ -229,7 +229,7 @@ window.onload = () => {
 	au.active = false;
 	au.canPlay = false;
 	isMobile = isMobileDevice();
-	isMobile = 1;
+	// isMobile = 1;
 	if (isMobile || 1)
 	{
 		maxDots = 100;
