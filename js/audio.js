@@ -4,7 +4,7 @@ class AudioManager {
 		this.lastPlayTime = 0;
 		this.canPlay = true;
 		this.active = true;
-		this.playInterval = ((isMobile) ? .2 : 0.05);
+		this.playInterval = ((isMobile) ? 2 : 0.05);
 		this.audioQueue = [];
 		this.buttonOk = new Audio(audioPath + "buttonOk.mp3");
 		this.gameOn = new Audio(audioPath + "gameOn.mp3");
