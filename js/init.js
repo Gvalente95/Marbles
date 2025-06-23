@@ -229,6 +229,8 @@ window.onload = () => {
 	au.active = false;
 	au.canPlay = false;
 	isMobile = window.innerWidth < 756;
+	if (isMobile)
+		maxDots = 100;
 	setTimeout(() => { au.active = true; au.canPlay = true;}, 300);
 	initUi();
 	update();
