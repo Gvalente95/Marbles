@@ -379,6 +379,8 @@ function addLeter(letter)
 	label.style.position = "relative";
 	label.pointerEvents = "block";
 	label.style.zIndex = "9999";
+	if (isMobile)
+		label.style.fontSize = "10vh";
 	return label;
 }
 
