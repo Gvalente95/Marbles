@@ -130,7 +130,7 @@ window.onload = () => {
 		amount = 1;
 		rate = 1;
 		au.active = false;
-		maxDots = 20;
+		maxDots = 200;
 	}
 	setTimeout(() => { au.canPlay = true; }, 300);
 	initUi();
