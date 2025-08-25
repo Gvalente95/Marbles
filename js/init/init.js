@@ -129,8 +129,8 @@ window.onload = () => {
 		au.maxQueue = 4;
 		amount = 1;
 		rate = 1;
+		au.active = false;
 		maxDots = 20;
-		selfCollision = false;
 	}
 	setTimeout(() => { au.canPlay = true; }, 300);
 	initUi();
