@@ -251,12 +251,11 @@ window.onload = () => {
 	{
 		amount = 1;
 		rate = 1;
-		maxDots = 5;
+		maxDots = 20;
 		selfCollision = false;
 		au.active = false;
 	}
-	else
-		setTimeout(() => { au.active = true; au.canPlay = true;}, 300);
+	setTimeout(() => { if (!isMobile) au.active = true; au.canPlay = true;}, 300);
 	initUi();
 	update();
 };
