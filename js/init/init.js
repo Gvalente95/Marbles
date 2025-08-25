@@ -127,8 +127,8 @@ window.onload = () => {
 	if (isMobile)
 	{
 		au.maxQueue = 2;
-		amount = 1;
-		rate = 1;
+		amount = 10;
+		rate = .1;
 		au.active = false;
 		maxDots = 200;
 	}
