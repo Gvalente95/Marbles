@@ -3,14 +3,14 @@ params = {
 amount: 5, rate: .05, speed: 40000, yGravity: 0.5, xGravity: 0,
 xDrag: 0.07, yDrag: 0, bounceFactor: .2, stickStiff: .05,
 minSize: 2, maxSize: 50, maxDots: 1000,
-selfCollision: true, darkMode: false, musicMode: true, highLightType: false,};
+darkMode: false, musicMode: true, highLightType: false,};
 let {
 amount, rate, speed, yGravity, xGravity,
 xDrag, yDrag, bounceFactor, stickStiff, 
 minSize, maxSize, maxDots,
-selfCollision, darkMode, musicMode, highLightType,} = params;
-const DotInteractionType = Object.freeze({ NONE: 'none', ATTRACT: 'attract', FUSE: 'fuse', REPEL: 'repel',});
-dotSelf = DotInteractionType.NONE;
+darkMode, musicMode, highLightType,} = params;
+const DotInteractionType = Object.freeze({ NONE: 'none', BASE: 'base', GROUP: 'group', FUSE: 'fuse', });
+let colParams = {dot: DotInteractionType.NONE};
 //	PARAMS
 
 menuBlock = null;

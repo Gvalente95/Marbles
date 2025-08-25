@@ -145,7 +145,7 @@ function switchMenuPage(pageIndex, force = false)
 		${colorB} 100%)`;
 
 	contentWrapper.pageIndex = pageIndex;
-	[...controls.querySelectorAll("label, span, button")].forEach(el => el.classList.toggle("hidden", !(el.pageIndex === pageIndex || el.pageIndex == -1)));
+	[...controls.querySelectorAll("label, span, button, mode")].forEach(el => el.classList.toggle("hidden", !(el.pageIndex === pageIndex || el.pageIndex == -1)));
 }
 
 function addResizers(element)
@@ -304,8 +304,8 @@ function addInfoBox(element, infoOrFn)
 		}
 		updateText();
 		infoBox.style.visibility = "visible";
-		infoBox.style.left = minmax(0, window.innerWidth - infoBox.w, mouseX - infoBox.w / 2) + 30 + "px";
-		infoBox.style.top = minmax(0, window.innerHeight - infoBox.h, mouseY - infoBox.h - 15) + "px";
+		infoBox.style.left = minmax(0, window.innerWidth - infoBox.w, mouseX + 15) + "px";
+		infoBox.style.top = minmax(0, window.innerHeight - infoBox.h, mouseY + 15) + "px";
 	});
 
 	element.addEventListener("mouseleave", () => {

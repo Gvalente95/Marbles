@@ -64,7 +64,7 @@ z-index: 10;
 	position: absolute;
 	visibility: hidden;
 	white-space: nowrap;
-	background: rgba(0, 0, 0, 0.899);
+	background: rgba(0, 0, 0, 0.53);
 	padding: 10px;
 	border-radius: 8px;
 	z-index: 9999;

@@ -23,45 +23,52 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 	button.style.backgroundColor = currentValue == null ? "rgba(132, 132, 132, 0.2)" : currentValue ? onColor : offColor;
 	button.baseColor = button.style.backgroundColor;
 
-	// Keybind section (left side)
-	const keyDiv = document.createElement("div");
-	keyDiv.textContent = keyBind ? keyBind : "";
-	keyDiv.style.width = 50 + "px";
-	keyDiv.style.fontSize = controls.style.fontSize;
-	keyDiv.style.height = "100%";
-	keyDiv.style.display = "flex";
-	keyDiv.style.alignItems = "center";
-	keyDiv.style.justifyContent = "center";
-	keyDiv.style.backgroundColor = "rgba(0,0,0,0.1)";
-	keyDiv.style.color = "black";
+	if (keyBind)
+	{
+		// Keybind section (left side)
+		const keyDiv = document.createElement("div");
+		keyDiv.textContent = keyBind ? keyBind : "";
+		keyDiv.style.width = 50 + "px";
+		keyDiv.style.fontSize = controls.style.fontSize;
+		keyDiv.style.height = "100%";
+		keyDiv.style.display = "flex";
+		keyDiv.style.alignItems = "center";
+		keyDiv.style.justifyContent = "center";
+		keyDiv.style.backgroundColor = "rgba(0,0,0,0.1)";
+		keyDiv.style.color = "black";
+		button.appendChild(keyDiv);
+	}
 
 	// Label section (right side)
 	const labelDiv = document.createElement("div");
 	labelDiv.textContent = labelText;
-	labelDiv.style.width = "72%";
+	labelDiv.style.width = keyBind ? "72%" : "100%";
 	labelDiv.style.height = "100%";
 	labelDiv.style.display = "flex";
 	labelDiv.style.alignItems = "center";
 	if (isMobile)
 		labelDiv.style.fontSize = controls.style.fontSize;
-	labelDiv.style.paddingLeft = "64px";
+	labelDiv.style.paddingLeft = keyBind ? "64px" : "16px";
 	labelDiv.pageIndex = pageIndex;
 	button.labelDiv = labelDiv;
-	button.appendChild(keyDiv);
 	button.appendChild(labelDiv);
+
 	addInfoBox(button, info);
 	const toggle = () => {
 		onChange(currentValue);
 		au.playSound(au.click);
-		if (currentValue != null)
+		if (value != -1)
 		{
-			currentValue = !currentValue;
-			button.style.backgroundColor = currentValue ? onColor : offColor;
-		}
-		else
-		{
-			button.style.backgroundColor = "rgba(0, 0, 0, 0.17)";
-			setTimeout(() => button.style.backgroundColor = button.baseColor, 100);
+			if (currentValue != null)
+			{
+				currentValue = !currentValue;
+				button.style.backgroundColor = currentValue ? onColor : offColor;
+			}
+			else
+			{
+				button.style.backgroundColor = "rgba(0, 0, 0, 0.17)";
+				setTimeout(() => button.style.backgroundColor = button.baseColor, 100);
+			}
 		}
 	};
 	button.onclick = toggle;
@@ -115,6 +122,59 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 	label.appendChild(slider);
 	label.appendChild(valueDisplay);
 	return label;
+}
+
+function initBoxButtons()
+{
+	const boxNames = ["Concrete", "Gelatine", "Magnetite", "Vortex", "Teleport", "None"];
+
+	const rect = controls.getBoundingClientRect();
+	const w = (rect.width - 20) / 6;
+	for (let i = 0; i < 6; i++) {
+		const boxButton = document.createElement("div");
+		boxButton.type = boxNames[i];
+		boxButton.className = boxButton.type;
+		boxButton.classList.add("boxButton");
+		boxButton.textContent = boxNames[i];
+		boxButton.style.borderRadius = "0";
+		if (boxButton.textContent === "Teleport")
+			boxButton.style.background = "linear-gradient(to right, rgba(57, 204, 116, 0.3) 50%, rgba(255, 0, 0, 0.33) 50%)";
+		boxButton.style.width = w + "px";
+		boxButton.style.top = "100%";
+		boxButton.style.left = 10 + (i * w) + "px";
+		boxButton.onclick = () => { switchBoxButton(i); };
+		addInfoBox(boxButton, boxNames[i]);
+		boxButtons.push(boxButton);
+		contentWrapper.appendChild(boxButton);
+	}
+}
+
+function initSetButton()
+{
+	const setButton = createButton({
+		labelText: "Keys" + "\u00A0".repeat(20) + "Controls",
+		id: "SwitchPageButton",
+		value: null,
+		pageIndex: -1,
+		onChange: (v) => { switchMenuPage((contentWrapper.pageIndex + 1) % 2); },
+		keyBind: "P",
+		info: null,
+	});
+	setButton.setAttribute("tabindex", "-1");
+	setButton.style.pointerEvents = "auto";
+	setButton.style.userSelect = "none";  
+
+	emptySpace = document.createElement("div");
+	emptySpace.style.height = "20px";
+	contentWrapper.appendChild(emptySpace);
+	setButton.style.background = "linear-gradient(to right, \
+	rgba(132, 132, 132, 0.49) 0%, \
+	rgba(0, 0, 0, 0.3) 20%, \
+	rgba(0, 0, 0, 0.15) 50%)";
+
+	setButton.labelDiv.style.paddingLeft = "32px";
+	setButton.style.top = "120%";
+	contentWrapper.appendChild(setButton);
 }
 
 function initSliders()
@@ -259,15 +319,6 @@ let boxButtons = [];
 function initControlButtons()
 {
 	contentWrapper.appendChild(createButton({
-		labelText: "Self Collisions",
-		id: "SelfCollisionsButton",
-		value: selfCollision,
-		pageIndex: 1,
-		onChange: (v) => selfCollision = !selfCollision,
-		keyBind: "C",
-		info: "enable/disable collisions between dots",
-	})); // self Collisions
-	contentWrapper.appendChild(createButton({
 			labelText: "Highlight Velocity",
 			id: "highLightTypeocityButton",
 			value: 0,
@@ -366,51 +417,6 @@ function initControlButtons()
 		keyBind: "F",
 		info: "Dettach all boxes connected to the one behind the cursor",
 	})); // Detach boxes
-	const setButton = createButton({
-		labelText: "Keys" + "\u00A0".repeat(20) + "Controls",
-		id: "SwitchPageButton",
-		value: null,
-		pageIndex: -1,
-		onChange: (v) => { switchMenuPage((contentWrapper.pageIndex + 1) % 2); },
-		keyBind: "P",
-		info: null,
-	});
-	setButton.setAttribute("tabindex", "-1");
-	setButton.style.pointerEvents = "auto";
-	setButton.style.userSelect = "none";  
-
-	emptySpace = document.createElement("div");
-	emptySpace.style.height = "20px";
-	contentWrapper.appendChild(emptySpace);
-	setButton.style.background = "linear-gradient(to right, \
-	rgba(132, 132, 132, 0.49) 0%, \
-	rgba(0, 0, 0, 0.3) 20%, \
-	rgba(0, 0, 0, 0.15) 50%)";
-
-	setButton.labelDiv.style.paddingLeft = "32px";
-	setButton.style.top = "120%";
-	contentWrapper.appendChild(setButton);
-	const boxNames = ["Concrete", "Gelatine", "Magnetite", "Vortex", "Teleport", "None"];
-
-	const rect = controls.getBoundingClientRect();
-	const w = (rect.width - 20) / 6;
-	for (let i = 0; i < 6; i++) {
-		const boxButton = document.createElement("div");
-		boxButton.type = boxNames[i];
-		boxButton.className = boxButton.type;
-		boxButton.classList.add("boxButton");
-		boxButton.textContent = boxNames[i];
-		boxButton.style.borderRadius = "0";
-		if (boxButton.textContent === "Teleport")
-			boxButton.style.background = "linear-gradient(to right, rgba(57, 204, 116, 0.3) 50%, rgba(255, 0, 0, 0.33) 50%)";
-		boxButton.style.width = w + "px";
-		boxButton.style.top = "100%";
-		boxButton.style.left = 10 + (i * w) + "px";
-		boxButton.onclick = () => { switchBoxButton(i); };
-		addInfoBox(boxButton, boxNames[i]);
-		boxButtons.push(boxButton);
-		contentWrapper.appendChild(boxButton);
-	}
 }
 
 function addLeter(letter)
@@ -508,6 +514,53 @@ function initControls()
 	controls.fullWidth = controls.style.width;
 }
 
+function initModesButton(label, modeNames, modeInfos, valueRef, startMode = modeNames[0], pageIndex = 0)
+{
+	const modeContainer = document.createElement("div");
+	modeContainer.className = "mode";
+    modeContainer.style.display = "flex"; // Horizontal layout
+    modeContainer.style.flexDirection = "row"; // Ensure horizontal arrangement
+	modeContainer.style.width = "100%";
+	modeContainer.style.marginTop = "10px";
+	modeContainer.pageIndex = pageIndex;
+	const buttons = [];
+
+	const labelDiv = document.createElement("div");
+	labelDiv.textContent = label;
+	labelDiv.style.margin = "10px 2px";
+	labelDiv.style.marginRight = "20px";
+	modeContainer.appendChild(labelDiv);
+	let width = 80 / modeNames.length;
+	for (let i = 0; i < modeNames.length; i++)
+	{
+		const name = modeNames[i];
+		const newButton = (createButton({
+			labelText: name,
+			id: name,
+			value: -1,
+			pageIndex: pageIndex,
+			onChange: (v) => { switchMode(buttons, name, valueRef)},
+			keyBind: null,
+			info: i < modeInfos.length ? modeInfos[i] : "Set " + label + " to: " + name,
+		}));
+		newButton.style.width = width + "%";
+		newButton.style.borderRadius = "0px";
+		buttons.push(newButton);
+		modeContainer.appendChild(newButton);
+	}
+	contentWrapper.appendChild(modeContainer);
+	switchMode(buttons, startMode, valueRef);
+}
+
+function switchMode(modeButtons, newMode, valueRef) {
+    valueRef.dot = newMode;
+    for (let i = 0; i < modeButtons.length; i++) {
+        const b = modeButtons[i];
+        let color = b.id === newMode ? b.baseColor : "rgba(0, 0, 0, 0.15)";
+        b.style.backgroundColor = color;
+    }
+}
+
 function initUi()
 {
 	initControls()
@@ -515,6 +568,9 @@ function initUi()
 	initContentWrapper();
 	initSliders();
 	initControlButtons();
+	initModesButton("Collisions:", ["none", "base", "group", "fuse"], ["No Dot Collisions", "Normal dot collisions", "Dot attract each other", "Dot fuse together"], colParams, "base");
+	initSetButton();
+	initBoxButtons();
 	init_infoText();
 	initStartMenu();
 	switchDarkMode(false);

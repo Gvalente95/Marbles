@@ -289,8 +289,8 @@ function fuseDots(dotA, dotB, dots) {
 }
 
 function resolveSelfCollision(dotA, dotB) {
-	if (dotB.isLinkHead)return (0);
-	if (dotA.hasTouchedBorder && dotSelf === DotInteractionType.FUSE) { fuseDots(dotA, dotB); return (0); }
+	if (dotB.isLinkHead && colParams.dot === DotInteractionType.NONE) return (0);
+	if (dotA.hasTouchedBorder && colParams.dot === DotInteractionType.FUSE) { fuseDots(dotA, dotB); return (0); }
 	let xDist = dotB.x - dotA.x;
 	let yDist = dotB.y - dotA.y;
 	let dist = Math.sqrt(xDist * xDist + yDist * yDist);
@@ -310,7 +310,7 @@ function resolveSelfCollision(dotA, dotB) {
 	let pushA = (dotB.mass / totalMass) * overlap;
 	let pushB = (dotA.mass / totalMass) * overlap;
 
-	if (dotSelf === DotInteractionType.ATTRACT)
+	if (colParams.dot === DotInteractionType.GROUP)
 	{
 		pushA *= .8; pushB *= .8;
 		dotA.velocityX = dotB.velocityX;
@@ -353,14 +353,14 @@ function resolveSelfCollision(dotA, dotB) {
 		if (sum > 4)
 			au.playMarbleSound(dotA, sum);
 	}
-	if (dotSelf === DotInteractionType.ATTRACT)
+	if (colParams.dot === DotInteractionType.GROUP)
 		return (0);
 	return (1);
 }
 
 function update_self_collisions(dot, i, list = dots, shapeIndex = 0)
 {
-	if (!selfCollision)
+	if (colParams.dot === DotInteractionType.NONE)
 		return (0);
 	let hasCollisions = 0;
 	for (let j = i + 1; j < list.length; j++) {

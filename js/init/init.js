@@ -129,6 +129,7 @@ window.onload = () => {
 		au.maxQueue = 2;
 		amount = 1;
 		rate = 1;
+		au.active = false;
 		maxDots = 20;
 	}
 	setTimeout(() => { au.canPlay = true; }, 300);
