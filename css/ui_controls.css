@@ -15,8 +15,8 @@
 }
 
 #controls label {
-  display: block;
-  margin-bottom: 8px;
+  display: flex;
+  margin-bottom: 6px;
   font-weight: 300;
   color: #f0f0f0;
 }

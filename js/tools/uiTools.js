@@ -339,4 +339,11 @@ function attachHandleInfoBox(slider) {
 	slider.addEventListener("mouseenter", () => {
 		infoBox.style.visibility = "hidden";
 	});
+
+	slider.addEventListener("touchstart", () => {
+		infoBox.style.visibility = "hidden";
+	});
+	slider.addEventListener("touchend", () => {
+		infoBox.style.visibility = "hidden";
+	});
 }

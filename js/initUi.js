@@ -77,18 +77,12 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 
 function createSlider({ labelText, info, id, min, max, step, value, pageIndex, onChange }) {
 	const label = document.createElement("label");
-	label.style.userSelect = "none";
-	label.style.display = "flex";
-	label.style.alignItems = "center";
-	label.style.gap = "8px";
-	label.style.margin = "4px 0";
 	label.pageIndex = pageIndex;
 
 	const labelSpan = document.createElement("span");
 	labelSpan.textContent = labelText + ":";
 	labelSpan.style.minWidth = (isMobile ? 200 : 70) + "px";
 	labelSpan.style.color = "rgba(0, 0, 0, 0.84)";
-	labelSpan.pointerEvents = "block";
 	labelSpan.pageIndex = pageIndex;
 	addInfoBox(labelSpan, info + " [" + min + " - " + max + "]");
 
@@ -100,7 +94,7 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 	slider.step = step;
 	slider.value = value;
 	if (isMobile)
-		slider.style.height = "10px";
+		slider.style.height = "24px";
 	slider.style.flex = "1";
 	slider.style.backgroundColor = "rgba(0, 0, 0, 0.73)";
 	const valueDisplay = document.createElement("span");
@@ -214,7 +208,7 @@ function initSliders(contentWrapper)
 	onChange: (v) => xGravity = v
 	})); // xGrav
 	contentWrapper.appendChild(createSlider({
-	labelText: "Viscosity X",
+	labelText: "Drag X",
 	id: "DragSlider",
 	info: "Controls the ammount of horizontal velocity loss due to collisions applied to dots",
 	min: 0,
@@ -225,7 +219,7 @@ function initSliders(contentWrapper)
 	onChange: (v) => xDrag = v
 	})); // xDrag
 	contentWrapper.appendChild(createSlider({
-	labelText: "Viscosity Y",
+	labelText: "Drag Y",
 	id: "DragSlider",
 	info: "Controls the ammount of vertical velocity loss due to collisions applied to dots",
 	min: 0,
