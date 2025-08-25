@@ -244,7 +244,7 @@ function addLinkLine(child, parent)
 
 window.onload = () => {
 	au = new AudioManager();
-	au.active = false;
+	au.active = true;
 	au.canPlay = false;
 	isMobile = isMobileDevice();
 	if (isMobile)
@@ -254,9 +254,8 @@ window.onload = () => {
 		rate = 1;
 		maxDots = 20;
 		selfCollision = false;
-		au.active = false;
 	}
-	setTimeout(() => { if (!isMobile) au.active = true; au.canPlay = true;}, 300);
+	setTimeout(() => { au.canPlay = true; }, 300);
 	initUi();
 	update();
 };
