@@ -255,7 +255,8 @@ window.onload = () => {
 		selfCollision = false;
 		au.active = false;
 	}
-	setTimeout(() => { au.active = true; au.canPlay = true;}, 300);
+	else
+		setTimeout(() => { au.active = true; au.canPlay = true;}, 300);
 	initUi();
 	update();
 };
