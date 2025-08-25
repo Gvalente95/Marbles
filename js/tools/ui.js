@@ -347,3 +347,7 @@ function attachHandleInfoBox(slider) {
 		infoBox.style.visibility = "hidden";
 	});
 }
+
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}

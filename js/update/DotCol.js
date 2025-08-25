@@ -173,13 +173,8 @@ function orbitDot(dot, box, boxCenterX, boxCenterY)
 	const boxArea = box.width * box.height;
 	const maxBoxArea = (window.innerWidth / 2) * (window.innerHeight / 2);
 	const boxNorm = boxArea / maxBoxArea;
-	let attractSpeed = lerp(1, 2.5, boxNorm) * lerp(0.15, 0.35, massNorm);
+	let attractSpeed = lerp(8, 10, boxNorm) * lerp(0.15, 0.35, massNorm);
 	let orbitSpeed = lerp(4.5, 3.5, boxNorm) * lerp(.4, 0.35, massNorm);
-	// if (box.width < 300)
-	// {
-	// 	orbitSpeed *= .3;
-	// 	attractSpeed *= 2;
-	// }
 	console.warn(box.width);
 	dot.velocityX += dirX * attractSpeed * deltaTime * speed;
 	dot.velocityY += dirY * attractSpeed * deltaTime * speed;
@@ -190,25 +185,32 @@ function orbitDot(dot, box, boxCenterX, boxCenterY)
 	dot.velocityY *= drag;
 	dot.newX += (dot.newX - dot.x) * .9;
 	dot.newY += (dot.newY - dot.y) * .9;
-	if (!dot.inGel || r_range(0, 500) == 0)
+	if (dot.lastColBox != box || r_range(0, 500) == 0)
 	{
-		dot.inGel = 1;
+		if (dot.lastColBox != box && !box.inAnim)
+			playAnim(box,
+				"spinVortex 4s linear infinite, pulseGlow 2.5s ease-in-out infinite",
+				"spinVortexImpact 4s linear infinite, pulseGlow 2.5s ease-in-out infinite",
+				4000,
+			);
 		au.playBoxSound(dot, box);
 	}
+}
+
+function playAnim(box, baseAnim, newAnim, duration) {
+    if (box._animationTimeout)
+        clearTimeout(box._animationTimeout);
+    if (box.inAnim) {box.style.animation = ""; void box.offsetWidth;}
+	box.inAnim = true;
+	box.style.animation = newAnim;
+    box._animationTimeout = setTimeout(() => {
+        box.style.animation = baseAnim; box.inAnim = false; box._animationTimeout = null;
+    }, duration);
 }
 
 
 function resolveBoxCollision(dot, box)
 {
-	// if (box.type === "Vortex") {
-	// 	const dx = dot.x - box.x;
-	// 	const dy = dot.y - box.y;
-	// 	const distance = Math.sqrt(dx * dx + dy * dy);
-	// 	if (distance > box.radius)
-	// 		return 0;
-	// }
-	// else if (!dotInOverlap(dot, box))
-	// 	return (0);
 	const boxCenterX = box.x + box.width / 2;
 	const boxCenterY = box.y + box.height / 2;
 	if (box == tpa && tpb)
@@ -264,9 +266,31 @@ function update_box_collisions(dot)
 	return hasBoxCollisions;
 }
 
+function fuseDots(dotA, dotB, dots) {
+	if (!dotA || !dotB || dotA === dotB) return;
+	if (dotB.radius > dotA.radius)
+	{
+		let tmp = dotA;
+		dotA = dotB;
+		dotB = tmp;
+	}
+    const distX = dotB.centerX - dotA.centerX;
+    const distY = dotB.centerY - dotA.centerY;
+    const distance = Math.sqrt(distX * distX + distY * distY);
+    const minDistance = (dotA.radius || 1) + (dotB.radius || 1); // Sum of radii
+    if (distance > minDistance) return;
+	let newRadius = Math.min(maxSize, dotA.radius + dotB.radius / 2);
+    resizeDot(dotA, newRadius);
+    const centerX = (dotA.centerX + dotB.centerX) / 2;
+    const centerY = (dotA.centerY + dotB.centerY) / 2;
+    dotA.newX = centerX - dotA.radius;
+    dotA.newY = centerY - dotA.radius;
+    deleteDot(dotB, dots);
+}
+
 function resolveSelfCollision(dotA, dotB) {
-	if (dotB.isLinkHead)
-		return (0);
+	if (dotB.isLinkHead)return (0);
+	if (dotA.hasTouchedBorder && dotSelf === DotInteractionType.FUSE) { fuseDots(dotA, dotB); return (0); }
 	let xDist = dotB.x - dotA.x;
 	let yDist = dotB.y - dotA.y;
 	let dist = Math.sqrt(xDist * xDist + yDist * yDist);
@@ -283,8 +307,16 @@ function resolveSelfCollision(dotA, dotB) {
 	// 	return;
 	const overlap = minDist - dist;
 	const totalMass = dotA.mass + dotB.mass;
-	const pushA = (dotB.mass / totalMass) * overlap;
-	const pushB = (dotA.mass / totalMass) * overlap;
+	let pushA = (dotB.mass / totalMass) * overlap;
+	let pushB = (dotA.mass / totalMass) * overlap;
+
+	if (dotSelf === DotInteractionType.ATTRACT)
+	{
+		pushA *= .8; pushB *= .8;
+		dotA.velocityX = dotB.velocityX;
+		dotA.velocityY = dotB.velocityY;
+		dotA.style.backgroundColor = dotB.style.backgroundColor
+	};
 
 	dotA.newX -= xDist * (pushA / dist);
 	dotA.newY -= yDist * (pushA / dist);
@@ -321,6 +353,8 @@ function resolveSelfCollision(dotA, dotB) {
 		if (sum > 4)
 			au.playMarbleSound(dotA, sum);
 	}
+	if (dotSelf === DotInteractionType.ATTRACT)
+		return (0);
 	return (1);
 }
 
@@ -328,8 +362,6 @@ function update_self_collisions(dot, i, list = dots, shapeIndex = 0)
 {
 	if (!selfCollision)
 		return (0);
-	// if (dot.isLinkHead)
-	// 	return;
 	let hasCollisions = 0;
 	for (let j = i + 1; j < list.length; j++) {
 		const other = list[j];

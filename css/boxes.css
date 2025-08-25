@@ -171,8 +171,22 @@
 
 @keyframes spinVortex {
 	from { transform: rotate(0deg) scale(1); }
-	to   { transform: rotate(360deg) scale(1.02); }
+	to   { transform: rotate(-360deg) scale(1.02); }
 }
+
+@keyframes spinVortexImpact {
+    0% {transform: rotate(0deg) scale(1);}
+    13.96% {transform: rotate(-360deg) scale(1.004);}
+    59.39% {transform: rotate(-720deg) scale(1.012);}
+    100% {transform: rotate(-1080deg) scale(1.02);}
+}
+
+@keyframes spinVortexImpactInvert {
+    0% {transform: rotate(0deg) scale(1);}
+    13.96% {transform: rotate(360deg) scale(1.004);}
+    100% {transform: rotate(720deg) scale(1);}
+}
+
 
 @keyframes pulseGlow {
 	0%, 100% { box-shadow: 0 0 12px rgba(255, 0, 255, 0.3); }

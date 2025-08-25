@@ -16,7 +16,7 @@ addEventListener('mousedown', (event) => {
 		if (boxType != "None")
 			curBox = init_box(mouseX, mouseY);
 	}
-	dropTime = 0;
+	lastDotsDrop = 0;
 });
 
 addEventListener('mouseup', (event) => {

@@ -117,7 +117,7 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 	return label;
 }
 
-function initSliders(contentWrapper)
+function initSliders()
 {
 	contentWrapper.appendChild(createSlider({
 	labelText: "Click",
@@ -256,7 +256,7 @@ function initSliders(contentWrapper)
 let activeBoxIndex = 1;
 let boxType = "Gelatine";
 let boxButtons = [];
-function initButtons(contentWrapper, controls)
+function initControlButtons()
 {
 	contentWrapper.appendChild(createButton({
 		labelText: "Self Collisions",
@@ -467,7 +467,31 @@ function init_infoText()
 	document.body.appendChild(infoText);
 }
 
-function initUi()
+function initHeader()
+{
+	const header = document.createElement("div");
+	header.id = "controlsHeader";
+	header.textContent = "SETTINGS";
+	header.style.width = controls.style.width;
+	header.onclick = () => toggle_minimize_controls();
+	controls.appendChild(header);
+	controls.header = header;
+}
+
+function initContentWrapper()
+{
+	contentWrapper = document.createElement("div");
+	contentWrapper.pageIndex = 0;
+	contentWrapper.className = "control-content";
+	contentWrapper.id = "ControlWrapper";
+	controls.appendChild(contentWrapper);
+	const label = document.createElement("div");
+	label.id = "controllLabel";
+	contentWrapper.appendChild(label);
+	contentWrapper.style.userSelect = "none";
+}
+
+function initControls()
 {
 	const controls = document.getElementById("controls");
 	controls.addEventListener("mouseenter", () => { controls.style.opacity = "1"; });
@@ -481,37 +505,25 @@ function initUi()
 	initDragControls(controls);
 	addResizer(controls, "left", null, 300, 600);
 	addResizer(controls, "right", null, 300, 600);
-	const header = document.createElement("div");
-	header.id = "controlsHeader";
-	header.textContent = "SETTINGS";
-	header.style.width = controls.style.width;
-	header.onclick = () => toggle_minimize_controls();
-	controls.appendChild(header);
-	controls.header = header;
-	contentWrapper = document.createElement("div");
-	contentWrapper.pageIndex = 0;
-	contentWrapper.className = "control-content";
-	contentWrapper.id = "ControlWrapper";
-	controls.appendChild(contentWrapper);
-	const label = document.createElement("div");
-	label.id = "controllLabel";
-	contentWrapper.appendChild(label);
-	contentWrapper.style.userSelect = "none";
-	initSliders(contentWrapper);
-	initButtons(contentWrapper, controls);
-	[...controls.querySelectorAll("label, span, button")].forEach(el => el.style.color = "black");
 	controls.fullWidth = controls.style.width;
+}
+
+function initUi()
+{
+	initControls()
+	initHeader();
+	initContentWrapper();
+	initSliders();
+	initControlButtons();
 	init_infoText();
 	initStartMenu();
 	switchDarkMode(false);
 	switchMenuMode(true, true);
 	switchMenuPage(0, true);
-	switchBoxButton(0);
 	switchBoxButton(1);
 	if (!isMobile)
 		moveControls(controls, 25, 40);
 }
-
 
 function switchHighlightType()
 {

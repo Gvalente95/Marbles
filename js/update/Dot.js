@@ -101,16 +101,6 @@ function updateDot(dot, i)
 		dot.style.backgroundColor = getVelocityColor(dot);
 }
 
-function getVelocityColor(d)
-{
-	let intensity = 12;
-	let xVel = Math.abs(d.velocityX);
-	let yVel = Math.abs(d.velocityY);
-	let xClamped = minmax(0, 255, xVel * intensity);
-	let yClamped = minmax(0, 255, yVel * intensity);
-	return `rgb(${yClamped}, ${xClamped}, ${yClamped})`;
-}
-
 function updateDots() {
 	if (selDot)
 		updateSelDot();
@@ -126,44 +116,4 @@ function updateDots() {
 		deleteDot(dots_destroyed[i]);
 	dots_destroyed = [];
 	dots.sort((a, b) => b.active - a.active);
-}
-
-function getDotAtPos(x, y, radius = 20, list = dots, shape_index = 0) {
-	const sd = selDot;
-	if (sd && elementsOverlap(sd.x, sd.y, sd.size, sd.size, x, y, radius * 10, radius * 10))
-		return selDot;
-	let closest = null;
-	let closestDiff = Infinity;
-	for (let i = 0; i < list.length; i++) {
-		const d = list[i];
-		if (!d.active) break;
-		if (!elementsOverlap(d.x, d.y, d.size, d.size, x, y, radius, radius))
-			continue;
-		let diff = Math.abs(x - d.x) + Math.abs(y - d.y);
-		if (diff > closestDiff) continue;
-		closestDiff = diff;
-		closest = d;
-	}
-	if (!closest && shapes && shapes[shape_index])
-		return getDotAtPos(x, y, radius, shapes[shape_index].dots, shape_index + 1);
-	return closest;
-}
-
-function repelDots(pos, strength = 60)
-{
-	let radStrength = 200;
-	au.playSound(au.click);
-	createGelRipple(null, pos[0], pos[1], radStrength, .25, "rgba(255, 255, 255, 0.23)");
-	for (const d of dots)
-	{
-		let distX = (d.x + d.radius) - pos[0];
-		let distY = (d.y + d.radius) - pos[1];
-        let distance = Math.sqrt(distX * distX + distY * distY);
-		if (distance > radStrength || distance < 0.0001)
-			continue;
-		let angleRad = Math.atan2(distY, distX);
-		let normDist = 1 - (distance / radStrength);
-		d.velocityX = strength * normDist * Math.cos(angleRad);
-		d.velocityY = strength * normDist * Math.sin(angleRad);
-	}
 }

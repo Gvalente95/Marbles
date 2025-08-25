@@ -90,7 +90,7 @@ function updateBoxes()
 	for (let i = 0; i < boxes.length; i++)
 	{
 		const box = boxes[i];
-		if (box.className != "Concrete" || box.connectedBoxes.length != 0)
+		if (box.type != "Concrete" || box.connectedBoxes.length != 0)
 			continue;
 		if (box != selBox)
 			applyGravity(box, 3);

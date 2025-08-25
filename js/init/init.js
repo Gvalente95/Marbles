@@ -1,102 +1,3 @@
-function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, shape = null)
-{
-	let dot = getDotFromPool();
-	const isNew = (dot == null);
-	if (isNew)
-	{
-		dot = document.createElement("div");
-		document.body.appendChild(dot);
-		dots.push(dot);
-		dot.onRemove = function () {
-			createDotImpact(dot);
-			au.playGelSound(dot);
-			if (dot.linkLine)
-				deleteDotLinks(dot);
-		};
-	}
-	dot.active = true;
-	dot.className = "dot";
-	dot.x = x;
-	dot.y = y;
-	dot.startTime = Date.now();
-	dot.lifetime = 0;
-	dot.size = size;
-	dot.radius = size / 2;
-	dot.lastColBox = null;
-	dot.linkParent = null;
-	dot.shape = shape;
-	dot.linkChild = null;
-	dot.linkHead = null;
-	dot.linkLine = null;
-	dot.isLinkHead = false;
-	dot.id = r_range(0, 1000);
-	dot.centerX = x + dot.radius;
-	dot.centerY = y + dot.radius;
-	dot.destroy = false;
-	dot.mass = size * size;
-	dot.hasTouchedBorder = false;
-	dot.lastAudioBounce = dot.startTime;
-	dot.style.width = size + "px";
-	dot.style.height = size + "px";
-	dot.angle = angle;
-	dot.speed = 1;
-	dot.velocityX = Math.cos(dot.angle) * dot.speed;
-	dot.velocityY = Math.sin(dot.angle) * dot.speed;
-	if (highLightType)
-		dot.style.backgroundColor = "black";
-	else
-		dot.style.backgroundColor = `rgb(${r_range(0, 255)}, ${r_range(0, 255)}, ${r_range(0, 255)})`;
-	dot.baseColor = dot.style.backgroundColor;
-	dot.style.left = dot.x + "px";
-	dot.inGel = false;
-	dot.style.top = dot.y + "px";
-	dot.style.display = "block";
-	const sizeGroup = dot.size <= 50 / 3 ? 0 : dot.size <= 50 * 2 / 3 ? 1 : 2;
-	const groupIndex = (sizeGroup * 4) + Math.floor(r_range(0, 4));
-	dot.auIndex = Math.min(au.bells.length - 1, au.bells.length - 1 - groupIndex);
-	if (isInBox)
-		au.playGelSound(dot);
-	else
-		au.playMarbleSound(dot, 3, true);
-	return dot;
-}
-
-function getDotFromPool() {
-	for (let i = dots.length - 1; i >= 0; i--)
-		if (!dots[i].active)
-			return dots[i];
-	return null;
-}
-
-function initDots(list, startX, startY) {
-	const step = (Math.PI * 2) / amount;
-	let angle = Math.PI;
-	let isInBox = false;
-
-	for (const b of boxes) {
-		if (elementsOverlap(b.x, b.y, b.width, b.height, startX, startY, 1, 1)) {
-			isInBox = true;
-			break;
-		}
-	}
-
-	if (list === dots) {
-		const overdraw = (dots.length + amount) - maxDots;
-		for (let i = 0; i < overdraw; i++) {
-			deleteDot(dots[i]);
-		}
-	}
-
-	for (let i = 0; i < amount; i++) {
-		const size = r_range(minSize, maxSize);
-		const radius = size;
-		const offsetX = Math.cos(angle) * radius;
-		const offsetY = Math.sin(angle) * radius;
-		const dot = getDot(startX + offsetX, startY + offsetY, size, angle, isInBox);
-		angle += step;
-	}
-}
-
 function init_box(x, y, width = 1, height = 1, type = boxType)
 {
 	const box = document.createElement("div");
@@ -107,6 +8,7 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 	box.style.top = y + "px";
 	box.screws = [];
 	box.width = width;
+	box.inAnim = false;
 	box.angle = 0;
 	box.connectedBoxes = [];
 	box.height = height;
@@ -139,13 +41,9 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 	};
 	document.body.appendChild(box);
 	if (box.type == "Vortex")
-	{
-		const circle = document.createElement("div");
-		circle.className = "dot";
-		circle.style.x = 10 + "px";
-		circle.style.y = 10 + "px";
-		box.appendChild(circle);
-	}
+		playAnim(box,
+				"spinVortex 4s linear infinite, pulseGlow 2.5s ease-in-out infinite",
+				"spinVortexImpact 4s linear infinite, pulseGlow 2.5s ease-in-out", 700);
 	// else
 	// 	addRotator(box);
 	addResizers(box);
@@ -221,27 +119,6 @@ function addToShape(shape, x, y, isFirst = false, closeShape = false)
 	return newDot;
 }
 
-function addLinkLine(child, parent)
-{
-	const line = document.createElement("div");
-	line.className = "link-line";
-	line.dotA = child;
-	line.dotB = parent;
-	line.baseDX = -1;
-	line.baseDY = -1;
-	child.linkParent = parent;
-	if (parent)
-	{
-		parent.linkChild = child;
-		child.offsetX = child.x - parent.x;
-		child.offsetY = child.y - parent.y;
-		line.baseDX = child.x - parent.x;
-		line.baseDY = child.y - parent.y;
-	}
-	document.body.appendChild(line);
-	return line;
-}
-
 window.onload = () => {
 	au = new AudioManager();
 	au.active = true;
@@ -259,7 +136,3 @@ window.onload = () => {
 	initUi();
 	update();
 };
-
-function isMobileDevice() {
-    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}

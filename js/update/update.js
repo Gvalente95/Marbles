@@ -34,7 +34,7 @@ function updateMenu()
 function updateFallingDots(now)
 {
 	const maxAllowed = 1000;
-	if (menuBlock.started && menuBlock.active && dots.length < maxAllowed && now - menuDropTime > menuDropRate)
+	if (menuBlock.started && menuBlock.active && dots.length < maxAllowed && now - menulastDotsDrop > menuDropRate)
 	{
 		const size = 20 + Math.floor(now * .5);
 		const newDot = getDot(menuDropX, 0, size, Math.PI / 2 + r_range(-0.001, 0.001));
@@ -46,7 +46,7 @@ function updateFallingDots(now)
 			menuDropX += 0;
 			menuDropX += (size + 1) * menuDropDir;
 		}
-		menuDropTime = now;
+		menulastDotsDrop = now;
 	}
 }
 
@@ -64,9 +64,9 @@ function update()
 	updateDots();
 	requestAnimationFrame(update);
 	updateShapes();
-	if (!isDraggingControls && !curBox && !selBox && !selDot && !curShape && now - dropTime > rate && (keys[" "] || (mousePressed && (keys["Shift"] || boxType == "None")))) {
+	if (!isDraggingControls && !curBox && !selBox && !selDot && !curShape && now - lastDotsDrop > rate && (keys[" "] || (mousePressed && (keys["Shift"] || boxType == "None")))) {
 		initDots(dots, mouseX, mouseY);
-		dropTime = now;
+		lastDotsDrop = now;
 	}
 	infoText.textContent = "Dots " + dotsAlive + "/" + maxDots + "\n" + " Sounds " + au.audioQueue.length;
 	if (mouseStopped && selDot && selDot.shape)
