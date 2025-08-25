@@ -3,6 +3,7 @@ class AudioManager {
 	constructor() {
 		this.lastPlayTime = 0;
 		this.canPlay = true;
+		this.maxQueue = 200;
 		this.active = true;
 		this.playInterval = ((isMobile) ? 2 : 0.05);
 		this.audioQueue = [];
@@ -110,7 +111,7 @@ class AudioManager {
 		if (!this.canPlay) return false;
 		if (!forcePlay)
 		{
-			if (this.audioQueue.length > 200) return;
+			if (this.audioQueue.length > this.maxQueue) return;
 			// if (time - dot.lastAudioBounce < .1) return;
 			if (velocity < .1) return false;
 			if (!dot.hasTouchedBorder) return false;

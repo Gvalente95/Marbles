@@ -249,6 +249,7 @@ window.onload = () => {
 	isMobile = isMobileDevice();
 	if (isMobile)
 	{
+		au.maxQueue = 20;
 		amount = 1;
 		rate = 1;
 		maxDots = 20;
