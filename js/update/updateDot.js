@@ -80,30 +80,48 @@ function updateDot(dot, i)
 			dot.velocityY += repelStrength * (1 - dot.y / margin);
 		else if (dot.newY > window.innerHeight - margin)
 			dot.velocityY -= repelStrength * (1 - (window.innerHeight - dot.y) / margin);
+		applyGravity(dot, 1, .05);
 	}
 	else if (!dot.shape || dot.shape.first != dot)
 		applyGravity(dot);
 	let impact = 0;
-	impact += updateBorderCollision(dot)
+	impact += updateBorderCollision(dot);
 	impact += update_self_collisions(dot, i);
-	impact += update_box_collisions(dot);
-	if (impact > 0)
+	let boxImpacts = update_box_collisions(dot);
+	if (!boxImpacts)
+		lastColBox = null;
+	impact += boxImpacts;
+	if (impact && dot.lifetime > 1000)
 		applyDrag(dot);
 	dot.x = dot.newX;
 	dot.y = dot.newY;
 	dot.style.left = dot.x + "px";
 	dot.style.top = dot.y + "px";
+	if (highLightType == 1)
+		dot.style.backgroundColor = getVelocityColor(dot);
+}
+
+function getVelocityColor(d)
+{
+	let intensity = 12;
+	let xVel = Math.abs(d.velocityX);
+	let yVel = Math.abs(d.velocityY);
+	let xClamped = minmax(0, 255, xVel * intensity);
+	let yClamped = minmax(0, 255, yVel * intensity);
+	return `rgb(${yClamped}, ${xClamped}, ${yClamped})`;
 }
 
 function updateDots() {
 	if (selDot)
 		updateSelDot();
-	for (let i = 0; i < dots.length; i++)
+	let di;
+	for (di = 0; di < dots.length; di++)
 	{
-		if (!dots[i].active)
+		if (!dots[di].active)
 			break;
-		updateDot(dots[i], i);
+		updateDot(dots[di], di);
 	}
+	dotsAlive = di;
 	for (let i = 0;  i < dots_destroyed.length; i++)
 		deleteDot(dots_destroyed[i]);
 	dots_destroyed = [];
@@ -129,4 +147,23 @@ function getDotAtPos(x, y, radius = 20, list = dots, shape_index = 0) {
 	if (!closest && shapes && shapes[shape_index])
 		return getDotAtPos(x, y, radius, shapes[shape_index].dots, shape_index + 1);
 	return closest;
+}
+
+function repelDots(pos, strength = 60)
+{
+	let radStrength = 200;
+	au.playSound(au.click);
+	createGelRipple(null, pos[0], pos[1], radStrength, .25, "rgba(255, 255, 255, 0.23)");
+	for (const d of dots)
+	{
+		let distX = (d.x + d.radius) - pos[0];
+		let distY = (d.y + d.radius) - pos[1];
+        let distance = Math.sqrt(distX * distX + distY * distY);
+		if (distance > radStrength || distance < 0.0001)
+			continue;
+		let angleRad = Math.atan2(distY, distX);
+		let normDist = 1 - (distance / radStrength);
+		d.velocityX = strength * normDist * Math.cos(angleRad);
+		d.velocityY = strength * normDist * Math.sin(angleRad);
+	}
 }

@@ -18,7 +18,6 @@ function deleteDot(d) {
 	const i = dots.indexOf(d);
 	if (i !== -1) {
 		dots.splice(i, 1);
-		dots.push(d);
 	}
 }
 

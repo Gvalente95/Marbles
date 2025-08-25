@@ -9,6 +9,20 @@ background: #7b7b7b18;
 z-index: 10;
 }
 
+.infoText{
+	position: fixed;
+	right: 10px;
+	top: 10px;
+	text-align: right;
+	max-width: 200px;
+	padding: 5px;
+	color: rgba(0, 0, 0, 0.29);
+	font-Family: Arial, sans-serif;
+	white-Space: pre;
+	cursor: default;
+	user-select: none;
+}
+
 .titleLetter {
 	font-size: 20vh;
 	color: white;

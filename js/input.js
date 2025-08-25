@@ -13,19 +13,7 @@ addEventListener('mousedown', (event) => {
 		selDot = getDotAtPos(mouseX, mouseY, 100);
 	if (!curBox && !selBox && !selDot && !curShape)
 	{
-		if (boxType == "Teleport" && (tpa || tpb))
-		{
-			if (tpa && tpb)
-			{
-				initDots(dots, mouseX, mouseY);
-				return;
-			}
-			const other = tpa ? tpa : tpb;
-			curBox = init_box(mouseX, mouseY, other.width, other.height);
-			boxes.push(curBox);
-			curBox = null;
-		}
-		else if (boxType != "None")
+		if (boxType != "None")
 			curBox = init_box(mouseX, mouseY);
 	}
 	dropTime = 0;
@@ -72,6 +60,7 @@ addEventListener('mouseup', (event) => {
 });
 
 let mouseStopped = false;
+let mouseMoved = false;
 let mouseStopTimeout;
 addEventListener('mousemove', (event) => {
 	mouseDX = event.clientX - mouseX;
@@ -79,9 +68,11 @@ addEventListener('mousemove', (event) => {
 	mouseX = event.clientX;
 	mouseY = event.clientY;
 
+	if (mouseStopped)
+		mouseMoved = true;
 	mouseStopped = false;
 	clearTimeout(mouseStopTimeout);
-	mouseStopTimeout = setTimeout(() => { mouseStopped = true;}, 20);
+	mouseStopTimeout = setTimeout(() => { mouseStopped = true; }, 50);
 	if (selBox && !rotating)
 	{
 		selBox.velocityX = 0;
@@ -89,6 +80,8 @@ addEventListener('mousemove', (event) => {
 		setBoxPos(selBox, minmax(0, window.innerWidth - selBox.width, selBox.x + mouseDX), minmax(0, window.innerHeight - selBox.height, selBox.y + mouseDY));
 		selBox.connectedBoxes.forEach(cb => {if (cb != selBox) moveElement(cb, cb.x + mouseDX, cb.y + mouseDY);});
 		document.body.style.cursor = "grab";
+		if (mouseMoved)
+			au.playBoxSound(null, selBox);
 	}
 	if (curBox)
 	{
@@ -97,16 +90,20 @@ addEventListener('mousemove', (event) => {
 		let y1 = curBox.y;
 		let x2 = mouseX;
 		let y2 = mouseY;
-		if (r_range(0, 10) == 0)
+		if (mouseMoved)
 			au.playBoxSound(null, curBox, minmax(0, 1, Math.abs(mouseDX + mouseDY) / 10));
-		const left = Math.min(x1, x2);
-		const top = Math.min(y1, y2);
+		let left = Math.min(x1, x2);
+		let top = Math.min(y1, y2);
 		let width = Math.abs(x2 - x1);
 		let height = Math.abs(y2 - y1);
-		if (curBox.className == "Vortex")
+		if (curBox.type == "Vortex")
 		{
+			width = Math.min(width * 2, window.innerWidth / 2);
+			height = Math.min(height * 2, window.innerHeight / 2);
 			if (width > height) height = width * r_range(.95, 1.05);
 			else width = height * r_range(.95, 1.05);
+			left = curBox.x - width / 2;
+			top = curBox.y - height / 2;
 		}
 		curBox.style.left = left + "px";
 		curBox.style.top = top + "px";
@@ -141,12 +138,7 @@ addEventListener('keydown', (e) => {
 		switchMenuMode();
 	if (e.key === "Backspace")
 		removeAtPos(mouseX, mouseY);
-	else if (e.key === "x")
-		deleteDots();
-	else if (e.key === "b")
-		deleteBoxes();
-	else if (e.key === "Tab")
-	{
+	else if (e.key === "Tab") {
 		e.preventDefault();
 		toggle_minimize_controls();
 	}

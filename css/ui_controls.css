@@ -1,18 +1,18 @@
-	#controls {
-		position: fixed;
-		top: 20px;
-		left: 20px;
-		background: rgb(255, 255, 255);
-		border-radius: 12px;
-		padding: 0px;
-		font-family: "Segoe UI", Roboto, sans-serif;
-		font-size: 14px;
-		color: white;
-		z-index: 1000;
-		transition: height 0.2s ease, opacity 0.5s ease;
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-		will-change: left, top
-	}
+#controls {
+	position: fixed;
+	top: 20px;
+	left: 20px;
+	background: rgb(255, 255, 255);
+	border-radius: 12px;
+	padding: 0px;
+	font-family: "Segoe UI", Roboto, sans-serif;
+	font-size: 14px;
+	color: white;
+	z-index: 1000;
+	transition: height 0.2s ease, opacity 0.5s ease;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+	will-change: left, top
+}
 
 #controls label {
   display: block;

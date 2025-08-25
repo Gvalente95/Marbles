@@ -18,16 +18,17 @@ class AudioManager {
 		this.trill = new Audio(audioPath + "trill.mp3");
 		this.magnetSounds = this.initSounds(audioPath + "Magnet/", 5);
 		this.gelSounds = this.initSounds(audioPath + "Gel/", 10);
+		this.vortexSounds = this.initSounds(audioPath + "Vortex/", 7, ".wav");
 		this.concreteSounds = this.initSounds(audioPath + "Concrete/", 7);
 		this.stretchSounds = this.initSounds(audioPath + "Stretch/", 3);
 		this.bells = this.initSounds(audioPath + "Bells/", 11);
 		this.initMarbleSounds();
 	}
 
-	initSounds(basePath, amount) {
+	initSounds(basePath, amount, extension = ".mp3") {
 		const sounds = [];
 		for (let i = 0; i < amount; i++)
-			sounds[i] = new Audio(basePath + i + ".mp3");
+			sounds[i] = new Audio(basePath + i + extension);
 		return sounds;
 	}
 
@@ -46,9 +47,9 @@ class AudioManager {
 		if (box) {
 			typeName = box.className;
 		}
-		const sounds = typeName === "Gelatine" ? this.gelSounds : typeName === "Concrete" ? this.concreteSounds: this.magnetSounds;
+		const sounds = typeName === "Gelatine" ? this.gelSounds : typeName === "Concrete" ? this.concreteSounds: typeName === "Vortex" ? this.vortexSounds : this.magnetSounds;
 		const base = sounds[r_range(0, sounds.length - 1)];
-		const au = base.cloneNode(); // CLONE l’objet Audio
+		const au = base.cloneNode();
 
 		if (dot) {
 			const velMax = Math.max(Math.abs(dot.velocityX), Math.abs(dot.velocityY));

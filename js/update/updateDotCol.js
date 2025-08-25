@@ -131,33 +131,34 @@ function concretizeDot(dot, box) {
 
 function breakDot(dot, box)
 {
+	if (dot.radius < 10)
+		return;
 	const marge = 50;
 	const revAngle = getRevAngle(dot.angle);
 	const dotX = minmax(marge, window.innerWidth - marge, dot.x);
 	const dotY = minmax(marge, window.innerHeight - marge, dot.y);
 	let newDot = getDot(dotX, dotY, dot.size / 2, revAngle);
 	deleteDot(dot);
+	dots.push(newDot);
 }
 
-function teleportDot(dot, boxA, boxB, boxACenterX, boxACenterY)
-{
+function teleportDot(dot, boxA, boxB, boxACenterX, boxACenterY) {
 	let centerXDiff = dot.centerX - boxACenterX;
 	let centerYDiff = dot.centerY - boxACenterY;
 	let newPX = boxB.x + boxB.width / 2 - dot.radius;
 	let newPY = boxB.y + boxB.height / 2 - dot.radius;
-	dot.newX = minmax(boxB.x - dot.radius - 5, boxB.x + boxB.width + 5, newPX - (centerXDiff * 1.2 * (boxA.width / boxB.width)));
-	dot.newY = minmax(boxB.y - dot.radius - 5, boxB.y + boxB.height + 5, newPY - (centerYDiff * 1.2 * (boxA.height / boxB.height)));
-	dot.style.left = dot.x + "px";
-	dot.style.top = dot.y + "px";
-	dot.velocityX *= .5;
-	dot.velocityY *= .5;
-	if (dot.linkLine)
-	{
-		dot.offsetX = dot.newX - dot.linkParent.x;
-		dot.offsetY = dot.newY - dot.linkParent.x;
-	}
-	au.playSound(au.click, .5);
-	return (1);
+	dot.newX = minmax(boxB.x - dot.radius - 5, boxB.x + boxB.width + 5, newPX - (centerXDiff * (boxB.width / boxA.width)));
+	dot.newY = minmax(boxB.y - dot.radius - 5, boxB.y + boxB.height + 5, newPY - (centerYDiff * (boxB.height / boxA.height)));
+	dot.x = dot.newX;
+	dot.y = dot.newY;
+	dot.style.left = dot.newX + "px";
+	dot.style.top = dot.newY + "px";
+	dot.velocityX *= 0.8;
+	dot.velocityY *= 0.8;
+	au.playSound(au.click, 0.5);
+	if (dot.isLinkHead)
+		CollapseLink(dot);
+	return 1;
 }
 
 function orbitDot(dot, box, boxCenterX, boxCenterY)
@@ -172,22 +173,42 @@ function orbitDot(dot, box, boxCenterX, boxCenterY)
 	const boxArea = box.width * box.height;
 	const maxBoxArea = (window.innerWidth / 2) * (window.innerHeight / 2);
 	const boxNorm = boxArea / maxBoxArea;
-	const attractSpeed = lerp(1, 3.5, boxNorm) * lerp(0.1, 0.7, massNorm);
-	const orbitSpeed = lerp(1.8, 0.5, boxNorm) * lerp(1, 0.35, massNorm);
+	let attractSpeed = lerp(1, 2.5, boxNorm) * lerp(0.15, 0.35, massNorm);
+	let orbitSpeed = lerp(4.5, 3.5, boxNorm) * lerp(.4, 0.35, massNorm);
+	// if (box.width < 300)
+	// {
+	// 	orbitSpeed *= .3;
+	// 	attractSpeed *= 2;
+	// }
+	console.warn(box.width);
 	dot.velocityX += dirX * attractSpeed * deltaTime * speed;
 	dot.velocityY += dirY * attractSpeed * deltaTime * speed;
 	dot.velocityX += tangentX * orbitSpeed * deltaTime * speed;
 	dot.velocityY += tangentY * orbitSpeed * deltaTime * speed;
-	dot.velocityX *= .7;
-	dot.velocityY *= .7;
+	let drag = .75;
+	dot.velocityX *= drag;
+	dot.velocityY *= drag;
 	dot.newX += (dot.newX - dot.x) * .9;
 	dot.newY += (dot.newY - dot.y) * .9;
+	if (!dot.inGel || r_range(0, 500) == 0)
+	{
+		dot.inGel = 1;
+		au.playBoxSound(dot, box);
+	}
 }
+
 
 function resolveBoxCollision(dot, box)
 {
-	if (!dotInOverlap(dot, box))
-		return (0);
+	// if (box.type === "Vortex") {
+	// 	const dx = dot.x - box.x;
+	// 	const dy = dot.y - box.y;
+	// 	const distance = Math.sqrt(dx * dx + dy * dy);
+	// 	if (distance > box.radius)
+	// 		return 0;
+	// }
+	// else if (!dotInOverlap(dot, box))
+	// 	return (0);
 	const boxCenterX = box.x + box.width / 2;
 	const boxCenterY = box.y + box.height / 2;
 	if (box == tpa && tpb)
@@ -201,6 +222,7 @@ function resolveBoxCollision(dot, box)
 		case "Vortex": orbitDot(dot, box, boxCenterX, boxCenterY);  break;
 		case "Magnetite": breakDot(dot, box); break;
 	}
+	dot.lastColBox = box;
 	return (1);
 }
 
@@ -217,11 +239,25 @@ function update_box_collisions(dot)
 		const dotCenterY = dot.newY + dot.radius;
 		const closestX = Math.max(box.x, Math.min(dotCenterX, box.x + box.width));
 		const closestY = Math.max(box.y, Math.min(dotCenterY, box.y + box.height));
-		const dx = dotCenterX - closestX;
-		const dy = dotCenterY - closestY;
-		const distSq = dx * dx + dy * dy;
-		if (distSq < dot.radius * dot.radius)
-			hasBoxCollisions += resolveBoxCollision(dot, box);
+		if (box.type === "Vortex") {
+				const boxCenterX = box.x + box.width / 2;
+				const boxCenterY = box.y + box.height / 2;
+				const dx = dotCenterX - boxCenterX;
+				const dy = dotCenterY - boxCenterY;
+				const distanceSquared = dx * dx + dy * dy;
+				const vortexRadius = box.width / 2;
+					const totalRadius = dot.radius + vortexRadius;
+				if (distanceSquared <= totalRadius * totalRadius)
+					hasBoxCollisions += resolveBoxCollision(dot, box);
+		}
+		else
+		{
+			const dx = dotCenterX - closestX;
+			const dy = dotCenterY - closestY;
+			const distSq = dx * dx + dy * dy;
+			if (distSq < dot.radius * dot.radius)
+				hasBoxCollisions += resolveBoxCollision(dot, box);
+		}
 	}
 	if (!hasBoxCollisions)
 		dot.inGel = false;
@@ -279,6 +315,8 @@ function resolveSelfCollision(dotA, dotB) {
 		dotA.velocityY = vFinal1.y;
 		dotB.velocityX = vFinal2.x;
 		dotB.velocityY = vFinal2.y;
+		if (!dotA.lastColBox || dotA.lastColBox.type == "Vortex")
+			return (1);
 		let sum = Math.abs(vFinal1.x + Math.abs(vFinal1.y));
 		if (sum > 4)
 			au.playMarbleSound(dotA, sum);
@@ -289,10 +327,10 @@ function resolveSelfCollision(dotA, dotB) {
 function update_self_collisions(dot, i, list = dots, shapeIndex = 0)
 {
 	if (!selfCollision)
-		return;
+		return (0);
 	// if (dot.isLinkHead)
 	// 	return;
-	let hasCollisions = false;
+	let hasCollisions = 0;
 	for (let j = i + 1; j < list.length; j++) {
 		const other = list[j];
 		if (!other.active) break;

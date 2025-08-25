@@ -14,6 +14,7 @@
 	border-radius: 50%;
 	cursor: grab;
 	z-index: 1;
+	animation: zoom .3s ease-in-out;
 	pointer-events: auto;
 }
 

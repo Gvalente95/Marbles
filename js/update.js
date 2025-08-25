@@ -68,9 +68,8 @@ function update()
 		initDots(dots, mouseX, mouseY);
 		dropTime = now;
 	}
-	const ctrl = document.getElementById("controllLabel");
-	ctrl.textContent = "Dots: " + dots.length + "/ " + maxDots + " auQueue: " + au.audioQueue.length + "\n";
+	infoText.textContent = "Dots " + dotsAlive + "/" + maxDots + "\n" + " Sounds " + au.audioQueue.length;
 	if (mouseStopped && selDot && selDot.shape)
 		au.playRandomSound(au.stretchSounds, .1);
-	mouseStopped = false;
+	mouseMoved = false;
 }

@@ -22,6 +22,7 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, sh
 	dot.lifetime = 0;
 	dot.size = size;
 	dot.radius = size / 2;
+	dot.lastColBox = null;
 	dot.linkParent = null;
 	dot.shape = shape;
 	dot.linkChild = null;
@@ -30,8 +31,8 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, sh
 	dot.isLinkHead = false;
 	dot.id = r_range(0, 1000);
 	dot.centerX = x + dot.radius;
-	dot.destroy = false;
 	dot.centerY = y + dot.radius;
+	dot.destroy = false;
 	dot.mass = size * size;
 	dot.hasTouchedBorder = false;
 	dot.lastAudioBounce = dot.startTime;
@@ -41,7 +42,10 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, sh
 	dot.speed = 1;
 	dot.velocityX = Math.cos(dot.angle) * dot.speed;
 	dot.velocityY = Math.sin(dot.angle) * dot.speed;
-	dot.style.backgroundColor = `rgb(${r_range(0, 255)}, ${r_range(0, 255)}, ${r_range(0, 255)})`;
+	if (highLightType)
+		dot.style.backgroundColor = "black";
+	else
+		dot.style.backgroundColor = `rgb(${r_range(0, 255)}, ${r_range(0, 255)}, ${r_range(0, 255)})`;
 	dot.baseColor = dot.style.backgroundColor;
 	dot.style.left = dot.x + "px";
 	dot.inGel = false;
@@ -106,14 +110,15 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 	box.angle = 0;
 	box.connectedBoxes = [];
 	box.height = height;
-	box.tranf
-	addRotator(box);
 	box.active = false;
+	box.lastColBox = null;
 	box.velocityX = 0;
 	box.velocityY = 0;
+	box.type = boxType;
 	box.style.display = "block";
 	box.style.width = width + "px";
 	box.style.height = height + "px";
+	box.radius = width / 2;
 	if (type == "Teleport") {
 		let newClr;
 		if (!tpa) { newClr = "green"; tpa = box;}
@@ -141,8 +146,9 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 		circle.style.y = 10 + "px";
 		box.appendChild(circle);
 	}
-	else
-		addResizers(box);
+	// else
+	// 	addRotator(box);
+	addResizers(box);
 	box.addEventListener("mousedown", (e) => {
 		if (selBox || selDot || isResizing)
 			return;

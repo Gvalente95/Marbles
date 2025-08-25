@@ -142,6 +142,28 @@ function setNewLinkHead(newhead)
 	}
 }
 
+function CollapseLink(dot)
+{
+	let node = dot.linkChild;
+	while (node)
+	{
+		const nextNode = node.linkChild;
+		node.x = dot.x;
+		node.y = dot.y;
+		console.warn("YO");
+		node = nextNode;
+	}
+	node = dot.linkParent;
+	while (node)
+	{
+		const nextNode = node.linkParent;
+		node.x = dot.x;
+		node.y = dot.y;
+		console.warn("YA");
+		node = nextNode;
+	}
+}
+
 function linkAllDots()
 {
 	if (dots.length <= 1)

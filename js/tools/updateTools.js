@@ -35,10 +35,10 @@ function moveElement(element, x, y)
 	element.style.top = element.y + "px";
 }
 
-function applyGravity(element, mySpeed = 1)
+function applyGravity(element, mySpeed = 1, factor = 1)
 {
-	element.velocityY += yGravity * mySpeed * (deltaTime * speed);
-	element.velocityX += xGravity * mySpeed * (deltaTime * speed);
+	element.velocityY += (yGravity * mySpeed * (deltaTime * speed)) * factor;
+	element.velocityX += (xGravity * mySpeed * (deltaTime * speed)) * factor;
 }
 
 function applyDrag(element, x = xDrag, y = yDrag)

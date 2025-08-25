@@ -18,10 +18,10 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 	button.style.fontSize = "14px";
 	button.style.color = "black";
 	button.pageIndex = pageIndex;
-
 	const onColor = "rgba(28, 194, 95, 0.3)";
 	const offColor = "rgba(187, 36, 36, 0.3)";
 	button.style.backgroundColor = currentValue == null ? "rgba(132, 132, 132, 0.2)" : currentValue ? onColor : offColor;
+	button.baseColor = button.style.backgroundColor;
 
 	// Keybind section (left side)
 	const keyDiv = document.createElement("div");
@@ -60,12 +60,13 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 		}
 		else
 		{
-			const prvClr = button.style.backgroundColor;
-			button.style.backgroundColor = "black";
-			setTimeout(() => button.style.backgroundColor = prvClr);
+			button.style.backgroundColor = "rgba(0, 0, 0, 0.17)";
+			setTimeout(() => button.style.backgroundColor = button.baseColor, 100);
 		}
 	};
 	button.onclick = toggle;
+	button.addEventListener("keydown", (e) => {if (e.key === " ") e.preventDefault(); e.stopPropagation();});
+	button.addEventListener("click", () => {button.blur();});
 	if (keyBind) {
 		document.addEventListener("keydown", (e) => {
 			if (e.key.toLowerCase() === keyBind.toLowerCase()) toggle();
@@ -110,9 +111,12 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 
 	attachHandleInfoBox(slider, () => slider.value);
 	slider.addEventListener("input", () => {	
+		au.playSound(au.dig);
 		valueDisplay.textContent = slider.value;
 		onChange(parseFloat(slider.value));
 	});
+	if (labelText === "Size Max" || labelText === "Size Min")
+		slider.addEventListener("mouseup", () =>{ resizeDots();});
 	label.appendChild(labelSpan);
 	label.appendChild(slider);
 	label.appendChild(valueDisplay);
@@ -210,22 +214,22 @@ function initSliders(contentWrapper)
 	onChange: (v) => xGravity = v
 	})); // xGrav
 	contentWrapper.appendChild(createSlider({
-	labelText: "Drag X",
+	labelText: "Viscosity X",
 	id: "DragSlider",
 	info: "Controls the ammount of horizontal velocity loss due to collisions applied to dots",
 	min: 0,
-	max: .5,
+	max: .99,
 	step: 0.01,
 	value: params.xDrag,
 	pageIndex: 0,
 	onChange: (v) => xDrag = v
 	})); // xDrag
 	contentWrapper.appendChild(createSlider({
-	labelText: "Drag Y",
+	labelText: "Viscosity Y",
 	id: "DragSlider",
 	info: "Controls the ammount of vertical velocity loss due to collisions applied to dots",
 	min: 0,
-	max: .5,
+	max: .99,
 	step: 0.01,
 	value: params.yDrag,
 	pageIndex: 0,
@@ -257,27 +261,9 @@ function initSliders(contentWrapper)
 
 let activeBoxIndex = 1;
 let boxType = "Gelatine";
-let	boxButtons = [];
+let boxButtons = [];
 function initButtons(contentWrapper, controls)
 {
-	contentWrapper.appendChild(createButton({
-		labelText: "Reset",
-		id: "ResetButton",
-		value: null,
-		pageIndex: 1,
-		onChange: (v) => reset(),
-		keyBind: "R",
-		info: "Delete all dots, boxes and shapes",
-	})); // reset
-	contentWrapper.appendChild(createButton({
-		labelText: "Audio",
-		id: "SwitchAuButton",
-		value: au.active,
-		pageIndex: 1,
-		onChange: (v) => au.active = !au.active,
-		keyBind: "A",
-		info: "Enable/Disable audio",
-	})); // audio
 	contentWrapper.appendChild(createButton({
 		labelText: "Self Collisions",
 		id: "SelfCollisionsButton",
@@ -288,14 +274,23 @@ function initButtons(contentWrapper, controls)
 		info: "enable/disable collisions between dots",
 	})); // self Collisions
 	contentWrapper.appendChild(createButton({
-		labelText: "Dark Mode",
-		id: "DarkModeButton",
-		value: darkMode,
+			labelText: "Highlight Velocity",
+			id: "highLightTypeocityButton",
+			value: 0,
+			pageIndex: 1,
+			onChange: (v) => { this.value = !this.value;  switchHighlightType()},
+			keyBind: "H",
+			info: "Map the color of each dot to it's velocity",
+	})); // Highlight Velocity
+	contentWrapper.appendChild(createButton({
+		labelText: "Audio",
+		id: "SwitchAuButton",
+		value: 1,
 		pageIndex: 1,
-		onChange: (v) => switchDarkMode(),
-		keyBind: "D",
-		info: "enable/disable dark mode",
-	})); // Dark Mode
+		onChange: (v) => au.active = !au.active,
+		keyBind: "A",
+		info: "Enable/Disable audio",
+	})); // audio
 	contentWrapper.appendChild(createButton({
 		labelText: "Music Mode",
 		id: "MusicModeButton",
@@ -305,6 +300,51 @@ function initButtons(contentWrapper, controls)
 		keyBind: "M",
 		info: "enable/disable musical notes on dots impact",
 	})); // music mode
+	contentWrapper.appendChild(createButton({
+		labelText: "Dark Mode",
+		id: "DarkModeButton",
+		value: darkMode,
+		pageIndex: 1,
+		onChange: (v) => switchDarkMode(),
+		keyBind: "D",
+		info: "enable/disable dark mode",
+	})); // Dark Mode
+	contentWrapper.appendChild(createButton({
+		labelText: "Reset",
+		id: "ResetButton",
+		value: null,
+		pageIndex: 1,
+		onChange: (v) => reset(),
+		keyBind: "R",
+		info: "Delete all dots, boxes and shapes",
+	})); // reset
+	contentWrapper.appendChild(createButton({
+			labelText: "Delete All Dots",
+			id: "DeleteAllDotsButton",
+			value: null,
+			pageIndex: 1,
+			onChange: (v) => { deleteDots()},
+			keyBind: "X",
+			info: "Delete all the dots",
+	})); // Delete Dots
+	contentWrapper.appendChild(createButton({
+		labelText: "DeleteBoxes",
+		id: "DeleteAllBoxesButton",
+		value: null,
+		pageIndex: 1,
+		onChange: (v) => deleteBoxes(),
+		keyBind: "B",
+		info: "Delete all the boxes",
+	})); // Delete Boxes
+	contentWrapper.appendChild(createButton({
+			labelText: "Repel Dots",
+			id: "RepelDotsButton",
+			value: null,
+			pageIndex: 1,
+			onChange: (v) => { repelDots([mouseX, mouseY])},
+			keyBind: "O",
+			info: "Repel Dots close to the cursor's position",
+	})); // Repel Dots
 	contentWrapper.appendChild(createButton({
 		labelText: "Link all dots",
 		id: "LinkAllButton",
@@ -332,7 +372,6 @@ function initButtons(contentWrapper, controls)
 		keyBind: "F",
 		info: "Dettach all boxes connected to the one behind the cursor",
 	})); // Detach boxes
-
 	const setButton = createButton({
 		labelText: "Keys" + "\u00A0".repeat(20) + "Controls",
 		id: "SwitchPageButton",
@@ -342,6 +381,10 @@ function initButtons(contentWrapper, controls)
 		keyBind: "P",
 		info: null,
 	});
+	setButton.setAttribute("tabindex", "-1");
+	setButton.style.pointerEvents = "auto";
+	setButton.style.userSelect = "none";  
+
 	emptySpace = document.createElement("div");
 	emptySpace.style.height = "20px";
 	contentWrapper.appendChild(emptySpace);
@@ -384,6 +427,8 @@ function addLeter(letter)
 	label.style.position = "relative";
 	label.pointerEvents = "block";
 	label.style.zIndex = "9999";
+	label.style.animation = "zoom 1s";
+	label.style.animation_timing_function = "ease-in-out";
 	if (isMobile)
 		label.style.fontSize = "10vh";
 	return label;
@@ -421,6 +466,13 @@ function initGlass(menuBlock)
 	boxes.push(init_box(window.innerWidth / 2 - w, window.innerHeight - bw - 200, w * 2 + 15, 200, "Gelatine"));
 }
 
+function init_infoText()
+{
+	infoText = document.createElement("div");
+	infoText.className = "infoText";
+	document.body.appendChild(infoText);
+}
+
 function initUi()
 {
 	const controls = document.getElementById("controls");
@@ -455,6 +507,7 @@ function initUi()
 	initButtons(contentWrapper, controls);
 	[...controls.querySelectorAll("label, span, button")].forEach(el => el.style.color = "black");
 	controls.fullWidth = controls.style.width;
+	init_infoText();
 	initStartMenu();
 	switchDarkMode(false);
 	switchMenuMode(true, true);
@@ -463,4 +516,15 @@ function initUi()
 	switchBoxButton(1);
 	if (!isMobile)
 		moveControls(controls, 25, 40);
+}
+
+
+function switchHighlightType()
+{
+	highLightType = !highLightType;
+	if (!highLightType || 1)
+	{
+		for (const d of dots)
+			d.style.backgroundColor = d.baseColor;
+	}
 }

@@ -77,7 +77,7 @@ function switchDarkMode(active = !darkMode) {
 	darkMode = active;
 	// document.body.style.background = darkMode ? baseDark : baseWhite;
 	if (darkMode) document.body.style.background = "linear-gradient(to bottom, rgb(35, 20, 37), rgb(13, 12, 20))";
-	else document.body.style.background = "linear-gradient(to bottom, rgb(196, 165, 213), rgb(153, 151, 209))";
+	else document.body.style.background = "linear-gradient(to bottom, rgb(196, 165, 213), rgba(131, 129, 193, 1))";
 
 	const controls = document.getElementById("controls");
 	if (!controls) return;
@@ -85,6 +85,7 @@ function switchDarkMode(active = !darkMode) {
 	const header = document.getElementById("controlsHeader");
 	header.style.color = darkMode ? "white" : "black";
 
+	infoText.style.color = darkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)";
 	if (darkMode) {
 		controls.style.background = "rgba(255, 255, 255, 0.05)";
 		controls.style.backdropFilter = "blur(10px)";
@@ -133,8 +134,8 @@ function switchMenuPage(pageIndex, force = false)
 {
 	if (!force && contentWrapper.pageIndex == pageIndex) return;
 	const button = document.getElementById("SwitchPageButton");
-	const colorA = pageIndex == 1 ? "rgba(0, 0, 0, 0.15)" : "rgba(0, 0, 0, 0.3)";
-	const colorB = pageIndex == 1 ? "rgba(0, 0, 0, 0.3)" : "rgba(0, 0, 0, 0.15)";
+	const colorA = pageIndex == 1 ? "rgba(0, 0, 0, 0.15)" : "rgba(0, 0, 0, 0.5)";
+	const colorB = pageIndex == 1 ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.15)";
 	button.style.background = `linear-gradient(to right, 
 		rgba(132, 132, 132, 0.49) 0%,
 		rgba(132, 132, 132, 0.49) 16%,	
@@ -303,7 +304,7 @@ function addInfoBox(element, infoOrFn)
 		}
 		updateText();
 		infoBox.style.visibility = "visible";
-		infoBox.style.left = minmax(0, window.innerWidth - infoBox.w, mouseX - infoBox.w / 2) + "px";
+		infoBox.style.left = minmax(0, window.innerWidth - infoBox.w, mouseX - infoBox.w / 2) + 30 + "px";
 		infoBox.style.top = minmax(0, window.innerHeight - infoBox.h, mouseY - infoBox.h - 15) + "px";
 	});
 

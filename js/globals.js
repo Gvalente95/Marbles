@@ -14,6 +14,7 @@ maxDots: 1000,
 selfCollision: true,
 darkMode: false,
 musicMode: true,
+highLightType: false,
 };
 let {
 amount,
@@ -31,8 +32,10 @@ maxDots,
 selfCollision,
 darkMode,
 musicMode,
+highLightType,
 } = params;
 
+dotsAlive = 0;
 time = 0;
 dots = [];
 menuDots = [];
@@ -64,3 +67,4 @@ menuDropTime = 0;
 menuDropX = 0;
 menuDropDir = 1;
 isMobile = false;
+infoText = null;

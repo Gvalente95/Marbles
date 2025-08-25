@@ -9,7 +9,7 @@ function createDotImpact(dot) {
 	let x = dot.newX + dot.velocityX * 2 + dot.radius;
 	let y = dot.newY + dot.velocityY * 2 + dot.radius;
 	const color = setAlphaColor(dot.baseColor || dot.style.backgroundColor, 0.3);
-	createGelRipple(null, x, y, dot.radius * 2, .5, color);
+	createGelRipple(null, x, y, dot.radius, .5, color);
 }
 
 function createGelRipple(box, x, y, radius = 20, dur = .5, color = "rgba(60, 141, 175, 0.41)") {
