@@ -58,6 +58,8 @@ function update()
 	deltaTime = (newNow - now) / 1000;
 	now = newNow;
 	au.update(now);
+	if (isMobile)
+		velTilt = getVelTilt();
 	if (isPaused) { requestAnimationFrame(update); return; }
 	updateFallingDots(now);
 	updateBoxes();

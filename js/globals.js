@@ -19,6 +19,7 @@ menulastDotsDrop = 0;
 menuDropX = 0;
 menuDropDir = 1;
 isMobile = false;
+velTilt = [1, 1];
 infoText = null;
 //	UI
 

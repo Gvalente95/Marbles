@@ -16,4 +16,38 @@ function rotate(velocity, angle) {
 	};}
 
 function getRevAngle(angle) {
-	return (angle + Math.PI) % (2 * Math.PI);}
+	return (angle + Math.PI) % (2 * Math.PI);
+}
+	
+
+function getVelTilt() {
+    let velX = 1, velY = 1;
+
+    if (typeof window.DeviceMotionEvent !== "undefined" && typeof window.DeviceMotionEvent.requestPermission === "function") {
+        DeviceMotionEvent.requestPermission().then(permissionState => {
+            if (permissionState === "granted") {
+                window.addEventListener("devicemotion", (event) => {
+                    const { x, y, z } = event.accelerationIncludingGravity;
+                    const magnitude = Math.sqrt(x * x + y * y + z * z);
+                    velX = -x / magnitude; // Normalize and invert x for intuitive tilt
+                    velY = -y / magnitude; // Normalize and invert y for intuitive tilt
+                    // Clamp to -1 to 1
+                    velX = Math.max(-1, Math.min(1, velX));
+                    velY = Math.max(-1, Math.min(1, velY));
+                }, { once: true });
+            }
+        }).catch(console.error);
+    } else if (window.DeviceMotionEvent) {
+        window.addEventListener("devicemotion", (event) => {
+            const { x, y, z } = event.accelerationIncludingGravity;
+            const magnitude = Math.sqrt(x * x + y * y + z * z);
+            velX = -x / magnitude; // Normalize and invert x
+            velY = -y / magnitude; // Normalize and invert y
+            // Clamp to -1 to 1
+            velX = Math.max(-1, Math.min(1, velX));
+            velY = Math.max(-1, Math.min(1, velY));
+        }, { once: true });
+    }
+
+    return [ velX, velY ];
+}
