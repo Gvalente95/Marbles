@@ -58,7 +58,7 @@ function update()
 	deltaTime = (newNow - now) / 1000;
 	now = newNow;
 	au.update(now);
-	if (isMobile)
+	if (isMobile && 0)
 	{
 		setVelTilt();
 	}
