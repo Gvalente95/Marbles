@@ -59,7 +59,10 @@ function update()
 	now = newNow;
 	au.update(now);
 	if (isMobile)
+	{
 		velTilt = getVelTilt();
+		console.warn(velTilt);
+	}
 	if (isPaused) { requestAnimationFrame(update); return; }
 	updateFallingDots(now);
 	updateBoxes();

@@ -21,9 +21,9 @@ function getRevAngle(angle) {
 	
 
 function getVelTilt() {
-    let velX = 1, velY = 1;
+    let velX = 0, velY = 0;
 
-    if (typeof window.DeviceMotionEvent !== "undefined" && typeof window.DeviceMotionEvent.requestPermission === "function") {
+	if (typeof window.DeviceMotionEvent !== "undefined" && typeof window.DeviceMotionEvent.requestPermission === "function") {
         DeviceMotionEvent.requestPermission().then(permissionState => {
             if (permissionState === "granted") {
                 window.addEventListener("devicemotion", (event) => {
@@ -37,9 +37,9 @@ function getVelTilt() {
                 }, { once: true });
             }
         }).catch(console.error);
-    } else if (window.DeviceMotionEvent) {
+	} else if (window.DeviceMotionEvent) {
         window.addEventListener("devicemotion", (event) => {
-            const { x, y, z } = event.accelerationIncludingGravity;
+			let { x, y, z } = event.accelerationIncludingGravity;
             const magnitude = Math.sqrt(x * x + y * y + z * z);
             velX = -x / magnitude; // Normalize and invert x
             velY = -y / magnitude; // Normalize and invert y
