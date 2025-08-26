@@ -21,7 +21,9 @@ menulastDotsDrop = 0;
 menuDropX = 0;
 menuDropDir = 1;
 isMobile = false;
-velTilt = [1, 1];
+velTiltX = 0;
+velTiltY = 0;
+velSensibility = 10;
 infoText = null;
 //	UI
 

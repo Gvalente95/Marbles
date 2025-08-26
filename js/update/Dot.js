@@ -55,8 +55,10 @@ function updateDot(dot, i)
 		}
 		updateLink(dot, dot.linkParent);
 	}
-	dot.newX = dot.x + (dot.velocityX * velTilt[0] * dot.speed * (deltaTime * speed));
-	dot.newY = dot.y + (dot.velocityY * velTilt[1] * dot.speed * (deltaTime * speed));
+	dot.velocityX += velTiltX * velSensibility;
+	dot.velocityY += velTiltY * velSensibility;
+	dot.newX = dot.x + (dot.velocityX * dot.speed * (deltaTime * speed));
+	dot.newY = dot.y + (dot.velocityY * dot.speed * (deltaTime * speed));
 	dot.newCenterX = dot.x + dot.radius;
 	dot.newCenterY = dot.y + dot.radius;
 	dot.lifetime = time - dot.startTime;

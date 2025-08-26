@@ -60,8 +60,13 @@ function update()
 	au.update(now);
 	if (isMobile)
 	{
-		velTilt = getVelTilt();
-		console.warn(velTilt);
+		setVelTilt();
+	}
+	else
+	{
+		velTiltX = ((keys['d'] ? 1 : 0) - (keys['a'] ? 1 : 0));
+		velTiltY = ((keys['s'] ? 1 : 0) - (keys['w'] ? 1 : 0));
+		console.warn(velTiltX);
 	}
 	if (isPaused) { requestAnimationFrame(update); return; }
 	updateFallingDots(now);

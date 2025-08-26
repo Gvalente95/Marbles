@@ -20,7 +20,7 @@ function getRevAngle(angle) {
 }
 	
 
-function getVelTilt() {
+function setVelTilt() {
     let velX = 0, velY = 0;
 
 	if (typeof window.DeviceMotionEvent !== "undefined" && typeof window.DeviceMotionEvent.requestPermission === "function") {
@@ -48,6 +48,6 @@ function getVelTilt() {
             velY = Math.max(-1, Math.min(1, velY));
         }, { once: true });
     }
-
-    return [ velX, velY ];
+	velTiltX = velX;
+	velTiltY = velY;
 }
