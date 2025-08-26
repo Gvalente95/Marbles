@@ -52,7 +52,6 @@ function updateDot(dot, i)
 		{
 			moveDot(dot, dot.linkParent.x + minmax(-5, 5, dot.offsetX),
 				dot.linkParent.y + minmax(-5, 5, dot.offsetY));
-			return;
 		}
 		updateLink(dot, dot.linkParent);
 	}
@@ -64,7 +63,7 @@ function updateDot(dot, i)
 	if (dot.isLinkHead) {
 		const baseAngle = Math.atan2(dot.velocityY, dot.velocityX);
 		const timeFactor = time * 0.001;
-		const wave = Math.sin(timeFactor + dot.id * 2) * 0.05; // Amplitude réduite
+		const wave = Math.sin(timeFactor + dot.id * 2) * 0.05;
 		const wiggle = (Math.random() - 0.5) * 0.01;
 		dot.angle = baseAngle + wave + wiggle;
 		const speed = Math.sqrt(dot.velocityX ** 2 + dot.velocityY ** 2) || 0.5;
@@ -110,6 +109,8 @@ function updateDots() {
 		if (!dots[di].active)
 			break;
 		updateDot(dots[di], di);
+		if (dots[di].isLinkHead)
+			debugDot(dots[di]);
 	}
 	dotsAlive = di;
 	for (let i = 0;  i < dots_destroyed.length; i++)

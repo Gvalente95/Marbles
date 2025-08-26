@@ -9,7 +9,9 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 	box.screws = [];
 	box.width = width;
 	box.inAnim = false;
+	box.canTp = true;
 	box.angle = 0;
+	box.mass = width * height;
 	box.connectedBoxes = [];
 	box.height = height;
 	box.active = false;
@@ -56,13 +58,9 @@ function init_box(x, y, width = 1, height = 1, type = boxType)
 		box.style.zIndex = 101;
 		selBox = box;
 	});
-	box.addEventListener("mouseup", (e) => {
-		prvBox = box;
-	});
-	box.addEventListener("mousemove", () => {
-		document.body.style.cursor = selBox ? "grab" : "pointer";});
-	box.addEventListener("mouseleave", () => {
-	document.body.style.cursor = "default";});
+	box.addEventListener("mouseup", (e) => {prvBox = box;});
+	box.addEventListener("mousemove", () => {document.body.style.cursor = selBox ? "grabbing" : "grab";});
+	box.addEventListener("mouseleave", () => {document.body.style.cursor = "default";});
 	return box;
 }
 

@@ -9,6 +9,12 @@ function absorbDot(dot, box)
 		dot.newX += (dot.x - dot.newX) * .1;
 		dot.newY += (dot.y - dot.newY) * .1;
 		dot.inGel = true;
+		if (!box.inAnim){
+			console.warn("YOUHX");
+			playAnim(box,
+					box.style.animation,
+					"jiggleImpact 1s infinite",
+					1000,);}
 		return;
 	}
 	const boxTop = box.y;
@@ -25,7 +31,7 @@ function absorbDot(dot, box)
 	dot.velocityY *= friction;
 }
 
-function concretizeDot(dot, box) {
+function concretizeDot(dot, box, playSound = true) {
 	const dotLeft   = dot.newX;
 	const dotRight  = dot.newX + dot.size;
 	const dotTop    = dot.newY;
@@ -80,28 +86,36 @@ function concretizeDot(dot, box) {
 
 	switch (side) {
 		case "left":
+			if (dot.mass > 1000 && Math.abs(dot.velocityX) > 4 && box.newX < window.innerWidth - box.width)
+				box.velocityX += dot.velocityX * dot.mass * .0001;
 			dot.velocityX *= -bounceFactor;
 			dot.newX = box.x - dot.size;
 			isImpact = Math.abs(dot.velocityX);
 			break;
 		case "right":
+			if (dot.mass > 1000 && Math.abs(dot.velocityX) > 4 && box.newX > box.width)
+				box.velocityX += dot.velocityX * dot.mass * .0001;
 			dot.velocityX *= -bounceFactor;
 			dot.newX = box.x + box.width;
 			isImpact = Math.abs(dot.velocityX);
 			break;
 		case "top":
+			if (dot.mass > 1000 && Math.abs(dot.velocityY) > 4 && box.newY < window.innerHeight - box.height)
+				box.velocityY += dot.velocityY * dot.mass * .0001;
 			dot.velocityY *= -bounceFactor;
 			dot.newY = box.y - dot.size;
 			isImpact = Math.abs(dot.velocityY);
 			break;
 		case "bottom":
+			if (dot.mass > 1000 && Math.abs(dot.velocityY) > 4 && box.newY > box.height)
+				box.velocityY += dot.velocityY * dot.mass * .0001;
 			dot.velocityY *= -bounceFactor;
 			dot.newY = box.y + box.height;
 			isImpact = Math.abs(dot.velocityY);
 			break;
 	}
 
-	if (isImpact > 1 && !menuBlock.active) {
+	if (isImpact > 1 && !menuBlock.active && playSound) {
 		au.playBoxSound(dot, box);
 		au.playMarbleSound(dot, Math.abs(dot.velocityX) + Math.abs(dot.velocityY));
 	}
@@ -143,12 +157,20 @@ function breakDot(dot, box)
 }
 
 function teleportDot(dot, boxA, boxB, boxACenterX, boxACenterY) {
-	let centerXDiff = dot.centerX - boxACenterX;
-	let centerYDiff = dot.centerY - boxACenterY;
-	let newPX = boxB.x + boxB.width / 2 - dot.radius;
-	let newPY = boxB.y + boxB.height / 2 - dot.radius;
-	dot.newX = minmax(boxB.x - dot.radius - 5, boxB.x + boxB.width + 5, newPX - (centerXDiff * (boxB.width / boxA.width)));
-	dot.newY = minmax(boxB.y - dot.radius - 5, boxB.y + boxB.height + 5, newPY - (centerYDiff * (boxB.height / boxA.height)));
+	if (!dot.canTp)
+		return (concretizeDot(dot, boxA, false));
+	if (!boxB)
+		boxB = boxA;
+	const centerXDiff = dot.centerX - boxACenterX;
+	const centerYDiff = dot.centerY - boxACenterY;
+	const borderLeft = boxB.x - dot.width - 1;
+	const borderRight = boxB.x + boxB.width + 5;
+	const borderDown = boxB.y + boxB.height + 5;
+	const borderTop = boxB.y - dot.width - 1;
+	const newPX = boxB.x + boxB.width / 2 - dot.width / 2;
+	const newPY = boxB.y + boxB.height / 2 - dot.height / 2;
+	dot.newX = minmax(borderLeft, borderRight, newPX - (centerXDiff * (boxB.width / boxA.width)));
+	dot.newY = minmax(borderTop, borderDown, newPY - (centerYDiff * (boxB.height / boxA.height)));
 	dot.x = dot.newX;
 	dot.y = dot.newY;
 	dot.style.left = dot.newX + "px";
@@ -156,8 +178,8 @@ function teleportDot(dot, boxA, boxB, boxACenterX, boxACenterY) {
 	dot.velocityX *= 0.8;
 	dot.velocityY *= 0.8;
 	au.playSound(au.click, 0.5);
-	if (dot.isLinkHead)
-		CollapseLink(dot);
+	dot.canTp = false;
+	setTimeout(() => { dot.canTp = true; }, boxA == boxB ? 2000 : 50);
 	return 1;
 }
 
@@ -175,7 +197,6 @@ function orbitDot(dot, box, boxCenterX, boxCenterY)
 	const boxNorm = boxArea / maxBoxArea;
 	let attractSpeed = lerp(8, 10, boxNorm) * lerp(0.15, 0.35, massNorm);
 	let orbitSpeed = lerp(4.5, 3.5, boxNorm) * lerp(.4, 0.35, massNorm);
-	console.warn(box.width);
 	dot.velocityX += dirX * attractSpeed * deltaTime * speed;
 	dot.velocityY += dirY * attractSpeed * deltaTime * speed;
 	dot.velocityX += tangentX * orbitSpeed * deltaTime * speed;
@@ -213,9 +234,9 @@ function resolveBoxCollision(dot, box)
 {
 	const boxCenterX = box.x + box.width / 2;
 	const boxCenterY = box.y + box.height / 2;
-	if (box == tpa && tpb)
+	if (box == tpa)
 		return teleportDot(dot, tpa, tpb, boxCenterX, boxCenterY);
-	else if (box == tpb && tpa)
+	else if (box == tpb)
 		return teleportDot(dot, tpb, tpa, tpb.x + tpb.width / 2, tpb.y + tpb.height / 2);
 	switch (box.className)
 	{
@@ -224,7 +245,8 @@ function resolveBoxCollision(dot, box)
 		case "Vortex": orbitDot(dot, box, boxCenterX, boxCenterY);  break;
 		case "Magnetite": breakDot(dot, box); break;
 	}
-	dot.lastColBox = box;
+	if (box.type != "Concrete")
+		dot.lastColBox = box;
 	return (1);
 }
 
@@ -360,13 +382,16 @@ function resolveSelfCollision(dotA, dotB) {
 
 function update_self_collisions(dot, i, list = dots, shapeIndex = 0)
 {
-	if (colParams.dot === DotInteractionType.NONE)
-		return (0);
+	if (colParams.dot === DotInteractionType.NONE) return (0);
+	if (colParams.link === LinkInteractionType.NONE && dot.hasLink) return (0);
+	if (colParams.link === LinkInteractionType.HEAD && dot.hasLink && !dot.isLinkHead) return (0);
+	if (stickStiff == 1 && (dot.hasLink && !dot.isLinkHead)) return (0);
 	let hasCollisions = 0;
 	for (let j = i + 1; j < list.length; j++) {
 		const other = list[j];
 		if (!other.active) break;
 		if (other == dot) continue;
+		if (colParams.link === LinkInteractionType.FAMILY && dot.hasLink && other.linkHead != dot.linkHead) continue;
 		const dx = dot.newX - other.x;
 		const dy = dot.newY - other.y;
 		const distSq = dx * dx + dy * dy;
@@ -428,4 +453,9 @@ function updateBorderCollision(dot) {
 	if (valueUsed > 2 && !dot.shape)
 		au.playMarbleSound(dot, valueUsed);
 	return hasImpact;
+}
+
+function debugDot(dot)
+{
+	dot.style.backgroundColor = "black";
 }

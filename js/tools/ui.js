@@ -75,7 +75,6 @@ const baseDark =  "rgb(38, 36, 39)";
 const baseWhite = "rgb(231, 204, 248)";
 function switchDarkMode(active = !darkMode) {
 	darkMode = active;
-	// document.body.style.background = darkMode ? baseDark : baseWhite;
 	if (darkMode) document.body.style.background = "linear-gradient(to bottom, rgb(35, 20, 37), rgb(13, 12, 20))";
 	else document.body.style.background = "linear-gradient(to bottom, rgb(196, 165, 213), rgba(131, 129, 193, 1))";
 
@@ -145,7 +144,7 @@ function switchMenuPage(pageIndex, force = false)
 		${colorB} 100%)`;
 
 	contentWrapper.pageIndex = pageIndex;
-	[...controls.querySelectorAll("label, span, button, mode")].forEach(el => el.classList.toggle("hidden", !(el.pageIndex === pageIndex || el.pageIndex == -1)));
+	[...controls.querySelectorAll(".mode, label, span, button, .button")].forEach(el => el.classList.toggle("hidden", !(el.pageIndex === pageIndex || el.pageIndex == -1)));
 }
 
 function addResizers(element)

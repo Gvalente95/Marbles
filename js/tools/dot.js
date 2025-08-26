@@ -19,7 +19,7 @@ function resizeDot(d, newRad)
 	d.auIndex = Math.min(au.bells.length - 1, au.bells.length - 1 - groupIndex);
 }
 
-function resizeDots() { for (const d of dots) if (d.radius < minSize || d.radius > maxSize) resizeDot(d, d.radius < minSize ? minSize : maxSize);}
+function resizeDots() { for (const d of dots) if (d.radius < minSize / 2 || d.radius > maxSize / 2) resizeDot(d, d.radius < minSize / 2 ? minSize / 2 : maxSize / 2);}
 
 function getVelocityColor(d)
 {
@@ -79,15 +79,17 @@ function addLinkLine(child, parent)
 	line.dotB = parent;
 	line.baseDX = -1;
 	line.baseDY = -1;
+	document.body.appendChild(line);
 	child.linkParent = parent;
+	child.hasLink = true;
 	if (parent)
 	{
 		parent.linkChild = child;
+		parent.hasLink = true;
 		child.offsetX = child.x - parent.x;
 		child.offsetY = child.y - parent.y;
 		line.baseDX = child.x - parent.x;
 		line.baseDY = child.y - parent.y;
 	}
-	document.body.appendChild(line);
 	return line;
 }

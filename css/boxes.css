@@ -38,7 +38,7 @@
   position: absolute;
   border: 2px solid rgba(255, 255, 255, 0.5);
   cursor: grab;
-  z-index: 100;
+  z-index: 0;
   overflow: hidden;
   background: radial-gradient(
     circle at center,
@@ -159,14 +159,8 @@
 }
 
 @keyframes gelRipple {
-	from {
-		transform: scale(1);
-		opacity: 1;
-	}
-	to {
-		transform: scale(3);
-		opacity: 0;
-	}
+	from {transform: scale(1);opacity: 1;}
+	to {transform: scale(3);opacity: 0;}
 }
 
 @keyframes spinVortex {
@@ -194,32 +188,26 @@
 }
 
 @keyframes jiggle {
-  0% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-  }
-  25% {
-    transform: translate(1px, -1px) rotate(1deg) scale(1.01); /* Slight stretch and tilt */
-  }
-  50% {
-    transform: translate(-1px, 1px) rotate(-1deg) scale(0.99); /* Compress and tilt back */
-  }
-  75% {
-    transform: translate(1px, -1px) rotate(1deg) scale(1.005); /* Smaller bounce */
-  }
-  100% {
-    transform: translate(0, 0) rotate(0deg) scale(1); /* Return to original */
-  }
+  0% {transform: translate(0, 0) rotate(0deg) scale(1);}
+  25% {transform: translate(1px, -1px) rotate(1deg) scale(1.01); /* Slight stretch and tilt */}
+  50% {transform: translate(-1px, 1px) rotate(-1deg) scale(0.99); /* Compress and tilt back */}
+  75% {transform: translate(1px, -1px) rotate(1deg) scale(1.005); /* Smaller bounce */}
+  100% {transform: translate(0, 0) rotate(0deg) scale(1); /* Return to original */}
+}
+
+@keyframes zoom {
+	0%{transform: scale(0);}
+	50%{transform: scale(1.1);}
+	100%{transform: scale(1);}
 }
 
 
-@keyframes zoom {
-	0%{
-    	transform: scale(0);
-	}
-	50%{
-    	transform: scale(1.1);
-	}
-	100%{
-    	transform: scale(1);
-	}
+
+@keyframes jiggleImpact {
+	0%{transform: scale(1);}
+	5%{transform: scale(.995);}
+	20%{transform: scale(1.005);}
+	40%{transform: scale(.999);}
+	70%{transform: scale(1.001);}
+	100%{transform: scale(1);}
 }

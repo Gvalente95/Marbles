@@ -74,4 +74,6 @@ function update()
 	if (mouseStopped && selDot && selDot.shape)
 		au.playRandomSound(au.stretchSounds, .1);
 	mouseMoved = false;
+	if (selDot)
+		document.body.style.cursor = "grabbing";
 }

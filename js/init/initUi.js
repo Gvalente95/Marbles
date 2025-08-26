@@ -42,13 +42,14 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 	// Label section (right side)
 	const labelDiv = document.createElement("div");
 	labelDiv.textContent = labelText;
-	labelDiv.style.width = keyBind ? "72%" : "100%";
+	labelDiv.style.flex = "1";                     // prend toute la largeur dispo
 	labelDiv.style.height = "100%";
 	labelDiv.style.display = "flex";
 	labelDiv.style.alignItems = "center";
+	labelDiv.style.justifyContent = "center";      // CENTRE LE TEXTE HORIZONTALEMENT
+	labelDiv.style.textAlign = "center";           // Sécurité pour le multiline
 	if (isMobile)
 		labelDiv.style.fontSize = controls.style.fontSize;
-	labelDiv.style.paddingLeft = keyBind ? "64px" : "16px";
 	labelDiv.pageIndex = pageIndex;
 	button.labelDiv = labelDiv;
 	button.appendChild(labelDiv);
@@ -76,7 +77,9 @@ function createButton({ labelText, id, value, pageIndex, onChange, keyBind = nul
 	button.addEventListener("click", () => {button.blur();});
 	if (keyBind) {
 		document.addEventListener("keydown", (e) => {
-			if (e.key.toLowerCase() === keyBind.toLowerCase()) toggle();
+			if (e.key.toLowerCase() === keyBind.toLowerCase()) {
+				toggle();
+				if (pageIndex >= 0) switchMenuPage(pageIndex, false);}
 		});
 	}
 	return button;
@@ -87,16 +90,18 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 	label.pageIndex = pageIndex;
 
 	const labelSpan = document.createElement("span");
-	labelSpan.textContent = labelText + ":";
+	labelSpan.textContent = labelText;
 	labelSpan.style.minWidth = (isMobile ? 200 : 70) + "px";
 	labelSpan.style.color = "rgba(0, 0, 0, 0.84)";
 	labelSpan.pageIndex = pageIndex;
-	addInfoBox(labelSpan, info + " [" + min + " - " + max + "]");
+	labelSpan.style.marginRight = "20px";
 
 	const slider = document.createElement("input");
 	slider.type = "range";
 	slider.id = id;
 	slider.min = min;
+	slider.style.thump = "5px";
+	slider.style.marginTop = isMobile ? "40px" : "5px";
 	slider.max = max;
 	slider.step = step;
 	slider.value = value;
@@ -104,6 +109,7 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 		slider.style.height = "24px";
 	slider.style.flex = "1";
 	slider.style.backgroundColor = "rgba(0, 0, 0, 0.73)";
+	addInfoBox(slider, info + " [" + min + " - " + max + "]");
 	const valueDisplay = document.createElement("span");
 	valueDisplay.id = id + "Value";
 	valueDisplay.textContent = value;
@@ -116,7 +122,7 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 		valueDisplay.textContent = slider.value;
 		onChange(parseFloat(slider.value));
 	});
-	if (labelText === "Size Max" || labelText === "Size Min")
+	if (labelText === "Max. Size" || labelText === "Min. Size")
 		slider.addEventListener("mouseup", () =>{ resizeDots();});
 	label.appendChild(labelSpan);
 	label.appendChild(slider);
@@ -127,7 +133,6 @@ function createSlider({ labelText, info, id, min, max, step, value, pageIndex, o
 function initBoxButtons()
 {
 	const boxNames = ["Concrete", "Gelatine", "Magnetite", "Vortex", "Teleport", "None"];
-
 	const rect = controls.getBoundingClientRect();
 	const w = (rect.width - 20) / 6;
 	for (let i = 0; i < 6; i++) {
@@ -179,8 +184,9 @@ function initSetButton()
 
 function initSliders()
 {
+	addHeaderInfo("INPUT", "INPUT", 0, 10);
 	contentWrapper.appendChild(createSlider({
-	labelText: "Click",
+	labelText: "Click Force",
 	info: "How many new dots per click.",
 	id: "amountSlider",
 	min: 1,
@@ -189,9 +195,9 @@ function initSliders()
 	value: params.amount,
 	pageIndex: 0,
 	onChange: (v) => amount = v,
-	})); // click
+	})); // click force
 	contentWrapper.appendChild(createSlider({
-	labelText: "Rate",
+	labelText: "Spawn Rate",
 	info: "How often dots are created while mouse is pressed.",
 	id: "rateSlider",
 	min: .001,
@@ -200,9 +206,10 @@ function initSliders()
 	value: params.rate,
 	pageIndex: 0,
 	onChange: (v) => rate = 1 - v
-	})); // rate
+	})); // spawn rate
+	addHeaderInfo("PHYSICS", "PHYSICS", 20, 10);
 	contentWrapper.appendChild(createSlider({
-	labelText: "Speed",
+	labelText: "Time Scale",
 	id: "speedSlider",
 	info: "Controls the speed of the whole simulation, great for slow-mo' effect!",
 	min: 10000,
@@ -211,51 +218,7 @@ function initSliders()
 	value: params.speed,
 	pageIndex: 0,
 	onChange: (v) => speed = v,
-	})); // speed
-	contentWrapper.appendChild(createSlider({
-	labelText: "Stick",
-	id: "stickStiffSlider",
-	info: "Controls how much glue is applied to dots linked together",
-	min: 0,
-	max: 1,
-	step: .01,
-	value: params.stickStiff,
-	pageIndex: 0,
-	onChange: (v) => stickStiff = v
-	})); // stick
-	contentWrapper.appendChild(createSlider({
-	labelText: "Size Min",
-	id: "sizeSlider",
-	info: "Minimum size of newly-created dots.",
-	min: 5,
-	max: 200,
-	step: 1,
-	value: params.minSize,
-	pageIndex: 0,
-	onChange: (v) => minSize = v
-	})); // minSize
-	contentWrapper.appendChild(createSlider({
-	labelText: "Size Max",
-	id: "sizeSlider",
-	info: "Maximum size of newly-created dots.",
-	min: 5,
-	max: 200,
-	step: 1,
-	value: params.maxSize,
-	pageIndex: 0,
-	onChange: (v) => maxSize = v
-	})); // maxSize
-	contentWrapper.appendChild(createSlider({
-	labelText: "Gravity Y",
-	id: "yGravitySlider",
-	info: "Vertical gravity modifier",
-	min: -1,
-	max: 1,
-	step: .1,
-	value: params.yGravity,
-	pageIndex: 0,
-	onChange: (v) => yGravity = v
-	})); // yGrav
+	})); // Time Scale
 	contentWrapper.appendChild(createSlider({
 	labelText: "Gravity X",
 	id: "xGravitySlider",
@@ -267,6 +230,17 @@ function initSliders()
 	pageIndex: 0,
 	onChange: (v) => xGravity = v
 	})); // xGrav
+	contentWrapper.appendChild(createSlider({
+	labelText: "Gravity Y",
+	id: "yGravitySlider",
+	info: "Vertical gravity modifier",
+	min: -1,
+	max: 1,
+	step: .1,
+	value: params.yGravity,
+	pageIndex: 0,
+	onChange: (v) => yGravity = v
+	})); // yGrav
 	contentWrapper.appendChild(createSlider({
 	labelText: "Drag X",
 	id: "DragSlider",
@@ -289,28 +263,6 @@ function initSliders()
 	pageIndex: 0,
 	onChange: (v) => yDrag = v
 	})); // yDrag
-	contentWrapper.appendChild(createSlider({
-	labelText: "Bounce",
-	id: "bounceSlider",
-	info: "Dots bounciness modifier, make'em jump!",
-	min: 0,
-	max: 1,
-	step: 0.01,
-	value: params.bounceFactor,
-	pageIndex: 0,
-	onChange: (v) => bounceFactor = v
-	})); // bounce
-	contentWrapper.appendChild(createSlider({
-	labelText: "Max",
-	id: "maxSlider",
-	info: "Limits the maximum amount of dots",
-	min: 5,
-	max: isMobile ? 100 : 3000,
-	step: 1,
-	value: params.maxDots,
-	pageIndex: 0,
-	onChange: (v) => maxDots = v
-	})); // max dots
 }
 
 let activeBoxIndex = 1;
@@ -382,23 +334,14 @@ function initControlButtons()
 		info: "Delete all the boxes",
 	})); // Delete Boxes
 	contentWrapper.appendChild(createButton({
-			labelText: "Repel Dots",
+			labelText: "Repel",
 			id: "RepelDotsButton",
 			value: null,
 			pageIndex: 1,
 			onChange: (v) => { repelDots([mouseX, mouseY])},
 			keyBind: "O",
-			info: "Repel Dots close to the cursor's position",
+			info: "Repel elements close to the cursor's position",
 	})); // Repel Dots
-	contentWrapper.appendChild(createButton({
-		labelText: "Link all dots",
-		id: "LinkAllButton",
-		value: null,
-		pageIndex: 1,
-		onChange: (v) => linkAllDots(),
-		keyBind: "L",
-		info: "Link all dots together",
-	})); // Link all dots
 	contentWrapper.appendChild(createButton({
 		labelText: "Attach Boxes",
 		id: "GroupBoxesButton",
@@ -514,53 +457,142 @@ function initControls()
 	controls.fullWidth = controls.style.width;
 }
 
-function initModesButton(label, modeNames, modeInfos, valueRef, startMode = modeNames[0], pageIndex = 0)
+function initModesButton(label, enumType, valueRef, propName, startMode = undefined, pageIndex = 0, modeInfos)
 {
 	const modeContainer = document.createElement("div");
 	modeContainer.className = "mode";
-    modeContainer.style.display = "flex"; // Horizontal layout
-    modeContainer.style.flexDirection = "row"; // Ensure horizontal arrangement
+	modeContainer.style.display = "flex";
+	modeContainer.style.flexDirection = "row";
 	modeContainer.style.width = "100%";
-	modeContainer.style.marginTop = "10px";
 	modeContainer.pageIndex = pageIndex;
+	modeContainer.style.marginBottom = "5px";
 	const buttons = [];
-
-	const labelDiv = document.createElement("div");
+	const labelDiv = document.createElement("span");
 	labelDiv.textContent = label;
-	labelDiv.style.margin = "10px 2px";
-	labelDiv.style.marginRight = "20px";
+	labelDiv.pageIndex = pageIndex;
+	labelDiv.style.margin = "13px 0px";
+	labelDiv.style.width = "80px";
 	modeContainer.appendChild(labelDiv);
-	let width = 80 / modeNames.length;
+	const modeNames = Object.values(enumType);
+	const width = 75 / modeNames.length;
 	for (let i = 0; i < modeNames.length; i++)
 	{
 		const name = modeNames[i];
-		const newButton = (createButton({
+		const newButton = createButton({
 			labelText: name,
 			id: name,
 			value: -1,
 			pageIndex: pageIndex,
-			onChange: (v) => { switchMode(buttons, name, valueRef)},
+			onChange: () => { switchMode(buttons, name, valueRef, propName); },
 			keyBind: null,
-			info: i < modeInfos.length ? modeInfos[i] : "Set " + label + " to: " + name,
-		}));
+			info: modeInfos && i < modeInfos.length ? modeInfos[i] : "Set " + label + " to: " + name,
+		});
+		if (!isMobile)
+		{
+			newButton.style.marginTop = "8px";
+			newButton.style.height = "25px";
+		}
 		newButton.style.width = width + "%";
 		newButton.style.borderRadius = "0px";
 		buttons.push(newButton);
 		modeContainer.appendChild(newButton);
 	}
+
 	contentWrapper.appendChild(modeContainer);
-	switchMode(buttons, startMode, valueRef);
+	const initial = startMode ?? valueRef[propName] ?? modeNames[0];
+	switchMode(buttons, initial, valueRef, propName);
+	function switchMode(modeButtons, newMode, valueRef, propName) {
+		valueRef[propName] = newMode;
+		for (let i = 0; i < modeButtons.length; i++) {
+			const b = modeButtons[i];
+			b.style.backgroundColor = b.id === newMode ? b.baseColor : "rgba(0, 0, 0, 0.15)";
+		}
+		for (const d of dots) {
+			d.style.backgroundColor = d.baseColor;
+		}
+	}
 }
 
-function switchMode(modeButtons, newMode, valueRef) {
-    valueRef.dot = newMode;
-    for (let i = 0; i < modeButtons.length; i++) {
-        const b = modeButtons[i];
-        let color = b.id === newMode ? b.baseColor : "rgba(0, 0, 0, 0.15)";
-        b.style.backgroundColor = color;
-    }
+function addDotsSegment()
+{
+	addHeaderInfo("A circle with many properties that can interact with other elements.", "DOTS");
+	const infoLabels = ["No Collisions", "Normal collisions", "Dot tend to stay attached", "Dot fuse together"];
+	initModesButton("Collisions", DotInteractionType, colParams, "dot", DotInteractionType.BASE, 0, infoLabels);
+	contentWrapper.appendChild(createSlider({
+	labelText: "Min. Size",
+	id: "sizeSlider",
+	info: "Minimum size of newly-created dots.",
+	min: 5, max: 200, step: 1,
+	value: params.minSize,
+	pageIndex: 0,
+	onChange: (v) => minSize = v})); // minSize
+	contentWrapper.appendChild(createSlider({
+	labelText: "Max. Size",
+	id: "sizeSlider",
+	info: "Maximum size of newly-created dots.",
+	min: 5, max: 200, step: 1,
+	value: params.maxSize,
+	pageIndex: 0,
+	onChange: (v) => maxSize = v})); // maxSize
+	contentWrapper.appendChild(createSlider({
+	labelText: "Max amount",
+	id: "maxSlider",
+	info: "Limits the maximum amount of dots",
+	min: 5, max: isMobile ? 100 : 3000, step: 1,
+	value: params.maxDots,
+	pageIndex: 0,
+		onChange: (v) => maxDots = v
+	})); // max dots
+	contentWrapper.appendChild(createSlider({
+	labelText: "Bounciness",
+	id: "bounceSlider",
+	info: "Dots bounciness modifier, make'em jump!",
+	min: 0,
+	max: 1,
+	step: 0.01,
+	value: params.bounceFactor,
+	pageIndex: 0,
+	onChange: (v) => bounceFactor = v
+	})); // bounce
 }
 
+function addHeaderInfo(info, label, margTop = 20, margDown = 0)
+{
+	const labelDiv = document.createElement("div");
+	addInfoBox(labelDiv, info);
+	labelDiv.className = "mode";
+	labelDiv.pageIndex = 0;
+	labelDiv.textContent = label;
+	labelDiv.style.marginTop = margTop + "px";
+	labelDiv.style.marginBottom = margDown + "px";
+	labelDiv.style.fontWeight = "bold";
+	contentWrapper.appendChild(labelDiv);
+}
+
+function addLinkSegment()
+{
+	addHeaderInfo("Form an unbreakable chain of dots by clicking 'L' or by dragging them onto each-other.", "LINKS");
+	const infoLabels = ["Link Dots won't collide with anything", "Link Dots will collide with everything", "Link Heads will collide with everything", "Link Dots won't collide with dots of the same chain"];
+	initModesButton("Collisions", LinkInteractionType, colParams, "link", LinkInteractionType.ALL, 0, infoLabels);
+	contentWrapper.appendChild(createButton({
+		labelText: "Link all dots",
+		id: "LinkAllButton",
+		value: null,
+		pageIndex: 0,
+		onChange: (v) => linkAllDots(),
+		keyBind: "L",
+		info: "Link all dots together",
+	})); // Link all dots
+	contentWrapper.appendChild(createSlider({
+	labelText: "Stick",
+	id: "stickStiffSlider",
+	info: "Controls how much glue is applied to dots linked together",
+	min: 0, max: 1, step: .01,
+	value: params.stickStiff,
+	pageIndex: 0,
+	onChange: (v) => stickStiff = v
+	})); // stick
+}
 function initUi()
 {
 	initControls()
@@ -568,7 +600,8 @@ function initUi()
 	initContentWrapper();
 	initSliders();
 	initControlButtons();
-	initModesButton("Collisions:", ["none", "base", "group", "fuse"], ["No Dot Collisions", "Normal dot collisions", "Dot attract each other", "Dot fuse together"], colParams, "base");
+	addDotsSegment();
+	addLinkSegment();
 	initSetButton();
 	initBoxButtons();
 	init_infoText();
@@ -579,14 +612,4 @@ function initUi()
 	switchBoxButton(1);
 	if (!isMobile)
 		moveControls(controls, 25, 40);
-}
-
-function switchHighlightType()
-{
-	highLightType = !highLightType;
-	if (!highLightType || 1)
-	{
-		for (const d of dots)
-			d.style.backgroundColor = d.baseColor;
-	}
 }

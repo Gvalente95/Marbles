@@ -9,8 +9,10 @@ amount, rate, speed, yGravity, xGravity,
 xDrag, yDrag, bounceFactor, stickStiff, 
 minSize, maxSize, maxDots,
 darkMode, musicMode, highLightType,} = params;
-const DotInteractionType = Object.freeze({ NONE: 'none', BASE: 'base', GROUP: 'group', FUSE: 'fuse', });
-let colParams = {dot: DotInteractionType.NONE};
+const DotInteractionType = Object.freeze({ NONE: 'None', BASE: 'Base', GROUP: 'Group', FUSE: 'Fuse', });
+const LinkInteractionType = Object.freeze({ NONE: 'None', ALL: 'All', HEAD: 'Head', FAMILY: 'Family', });
+
+let colParams = {dot: DotInteractionType.NONE, link: LinkInteractionType.NONE};
 //	PARAMS
 
 menuBlock = null;
@@ -25,8 +27,8 @@ infoText = null;
 
 keys = {};
 mousePressed = false;
-mouseX = 0;
-mouseY = 0;
+mouseX = window.innerWidth / 2;
+mouseY = window.innerHeight / 2;
 mouseDX = 0;
 mouseDY = 0;
 timeClick = 0;

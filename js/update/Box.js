@@ -1,18 +1,49 @@
+
+function orbitBox(boxA, boxB)
+{
+	const angleToBox = Math.atan2(boxB.centerY - boxA.centerY, boxB.centerX - boxA.centerX);
+	const dirX = Math.cos(angleToBox);
+	const dirY = Math.sin(angleToBox);
+	const tangentX = -dirY;
+	const tangentY = dirX;
+	const massNorm = boxA.mass / (maxSize * maxSize);
+	const boxArea = boxB.width * boxB.height;
+	const maxBoxArea = (window.innerWidth / 2) * (window.innerHeight / 2);
+	const boxNorm = boxArea / maxBoxArea;
+	let attractSpeed = lerp(8, 10, boxNorm) * lerp(0.15, 0.35, massNorm);
+	let orbitSpeed = lerp(4.5, 3.5, boxNorm) * lerp(.4, 0.35, massNorm);
+	boxA.velocityX += dirX * attractSpeed * deltaTime * speed;
+	boxA.velocityY += dirY * attractSpeed * deltaTime * speed;
+	boxA.velocityX += tangentX * orbitSpeed * deltaTime * speed;
+	boxA.velocityY += tangentY * orbitSpeed * deltaTime * speed;
+	// let drag = .75;
+	// boxA.velocityX *= drag;
+	// boxA.velocityY *= drag;
+	boxA.newX += (boxA.newX - boxA.x) * .9;
+	boxA.newY += (boxA.newY - boxA.y) * .9;
+	if (boxA.lastColBox != boxB)
+	{
+		if (boxA.lastColBox != boxB && !boxB.inAnim)
+			playAnim(boxB,
+				"spinVortex 4s linear infinite, pulseGlow 2.5s ease-in-out infinite",
+				"spinVortexImpact 4s linear infinite, pulseGlow 2.5s ease-in-out infinite",
+				4000,
+			);
+		au.playBoxSound(null, boxB);
+	}
+}
+
 function solveBoxCollisions(box, other)
 {
 	if (other === box || !boxesOverlap(box, other)) return (0);
 	if (box.velocityX == 0 && box.velocityY == 0)
 		return (0);
-	if (other == tpa && tpb)
+	if (other == tpa)
 		return teleportDot(box, tpa, tpb, box.centerX, box.centerY);
-	else if (other == tpb && tpa)
+	else if (other == tpb)
 		return teleportDot(box, tpb, tpa, tpb.x + tpb.width / 2, tpb.y + tpb.height / 2);
 	if (other.type === "Vortex")
-	{
-		if (box.lastColBox != other)
-			au.playBoxSound(null, other, .5);
-		box.velocityX += 2;
-	}
+		orbitBox(box, other);
 	else if (other.type === "Gelatine")
 	{
 		if (box.lastColBox != other)
@@ -61,7 +92,7 @@ function getNewBoxPos(box)
 		if (Math.abs(box.velocityX) > 2)
 			au.playBoxSound(null, box, .1);
 		box.velocityX *= -(bounceFactor);
-		box.newX = box.newX <= 0 ? marg : window.innerWidth - box.width - marg;
+		box.newX = box.newX <= marg ? marg : window.innerWidth - box.width - marg;
 		hasImpact++;
 	}
 	if (box.newY <= marg || box.newY >= window.innerHeight - box.height - marg)
@@ -69,7 +100,7 @@ function getNewBoxPos(box)
 		if (Math.abs(box.velocityY) > 2)
 			au.playBoxSound(null, box, .1);
 		box.velocityY *= -(bounceFactor);
-		box.newY = box.newY <= 0 ? marg : window.innerHeight - box.height - marg;
+		box.newY = box.newY <= marg ? marg : window.innerHeight - box.height - marg;
 		hasImpact++;
 	}
 	return hasImpact;
@@ -79,8 +110,6 @@ function setBoxPos(box, newX, newY)
 {
 	box.x = newX;
 	box.y = newY;
-	box.centerX = box.x + box.width / 2;
-	box.centerY = box.y + box.height / 2;
 	box.style.left = box.x + "px";
 	box.style.top = box.y + "px";
 }
@@ -94,6 +123,8 @@ function updateBoxes()
 			continue;
 		if (box != selBox)
 			applyGravity(box, 3);
+		box.centerX = box.x + box.width / 2;
+		box.centerY = box.y + box.height / 2;
 		let impactLen = 0;
 		impactLen += getNewBoxPos(box);
 		for (let j = 0; j < boxes.length; j++)

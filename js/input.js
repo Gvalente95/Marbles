@@ -79,7 +79,6 @@ addEventListener('mousemove', (event) => {
 		selBox.velocityY = 0;
 		setBoxPos(selBox, minmax(0, window.innerWidth - selBox.width, selBox.x + mouseDX), minmax(0, window.innerHeight - selBox.height, selBox.y + mouseDY));
 		selBox.connectedBoxes.forEach(cb => {if (cb != selBox) moveElement(cb, cb.x + mouseDX, cb.y + mouseDY);});
-		document.body.style.cursor = "grab";
 		if (mouseMoved)
 			au.playBoxSound(null, selBox);
 	}
@@ -146,6 +145,14 @@ addEventListener('keydown', (e) => {
 		let newIndex = (activeBoxIndex + (e.key === "ArrowLeft" ? -1 : 1) + boxButtons.length) % boxButtons.length;
 		switchBoxButton(newIndex)
 		au.playSound(au.click);
+	}
+	else if (e.key === 'u')
+	{
+		for (const d of dots)
+		{
+			if (d.isLinkHead)
+				CollapseLink(d);
+		}
 	}
 });
 
