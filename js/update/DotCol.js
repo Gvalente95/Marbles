@@ -311,72 +311,64 @@ function fuseDots(dotA, dotB, dots) {
 }
 
 function resolveSelfCollision(dotA, dotB) {
+
+	// const dotBCenterX = dotB.x + dotB.radius;
+	// const dotBCenterY = dotB.y + dotB.radius;
+	// const dx = dotA.centerX - dotBCenterX;
+	// const dy = dotA.centerY - dotBCenterY;
+	// const distanceSquared = dx * dx + dy * dy;
+	// const vortexRadius = dotB.radius;
+	// const totalRadius = dotA.radius + vortexRadius;
+	// if (distanceSquared > totalRadius * totalRadius)
+	// 	return (0);
+	let dx = dotA.newX - dotB.x;
+	let dy = dotA.newY - dotB.y;
+	let distSq = dx * dx + dy * dy;
+	let minDist = (dotA.radius + dotB.radius) + 0.1;
+	if (distSq >= minDist * minDist) return (0);
 	if (dotB.isLinkHead && colParams.dot === DotInteractionType.NONE) return (0);
 	if (dotA.hasTouchedBorder && colParams.dot === DotInteractionType.FUSE) { fuseDots(dotA, dotB); return (0); }
 	let xDist = dotB.x - dotA.x;
 	let yDist = dotB.y - dotA.y;
 	let dist = Math.sqrt(xDist * xDist + yDist * yDist);
-	const minDist = (dotA.size + dotB.size) / 2 + 0.1;
 
-	linkDots(dotA, dotB);
-	linkDots(dotB, dotA);
-	// if (dist === 0) {
-	// 	const angle = Math.random() * 2 * Math.PI;
-	// 	xDist = Math.cos(angle);
-	// 	yDist = Math.sin(angle);
-	// 	dist = 1e-6;
-	// } else if (dist >= minDist)
-	// 	return;
+	linkDots(dotA, dotB); linkDots(dotB, dotA);
 	const overlap = minDist - dist;
 	const totalMass = dotA.mass + dotB.mass;
 	let pushA = (dotB.mass / totalMass) * overlap;
 	let pushB = (dotA.mass / totalMass) * overlap;
-
 	if (colParams.dot === DotInteractionType.GROUP)
 	{
 		pushA *= .8; pushB *= .8;
 		dotA.velocityX = dotB.velocityX;
 		dotA.velocityY = dotB.velocityY;
-		dotA.style.backgroundColor = dotB.style.backgroundColor
+		dotA.style.backgroundColor = dotB.style.backgroundColor;
 	};
-
 	dotA.newX -= xDist * (pushA / dist);
 	dotA.newY -= yDist * (pushA / dist);
 	dotB.x    += xDist * (pushB / dist);
 	dotB.y    += yDist * (pushB / dist);
 	const xVelocityDiff = dotA.velocityX - dotB.velocityX;
 	const yVelocityDiff = dotA.velocityY - dotB.velocityY;
-
 	if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
 		const angle = -Math.atan2(yDist, xDist);
 		const u1 = rotate({ x: dotA.velocityX, y: dotA.velocityY }, angle);
 		const u2 = rotate({ x: dotB.velocityX, y: dotB.velocityY }, angle);
 		const m1 = dotA.mass;
 		const m2 = dotB.mass;
-
-		const v1 = {
-			x: (u1.x * (m1 - m2) + 2 * m2 * u2.x) / (m1 + m2),
-			y: u1.y
-		};
-		const v2 = {
-			x: (u2.x * (m2 - m1) + 2 * m1 * u1.x) / (m1 + m2),
-			y: u2.y
-		};
-
+		const v1 = {x: (u1.x * (m1 - m2) + 2 * m2 * u2.x) / (m1 + m2),y: u1.y};
+		const v2 = {x: (u2.x * (m2 - m1) + 2 * m1 * u1.x) / (m1 + m2),y: u2.y};
 		const vFinal1 = rotate(v1, -angle);
 		const vFinal2 = rotate(v2, -angle);
 		dotA.velocityX = vFinal1.x;
 		dotA.velocityY = vFinal1.y;
 		dotB.velocityX = vFinal2.x;
 		dotB.velocityY = vFinal2.y;
-		if (!dotA.lastColBox || dotA.lastColBox.type == "Vortex")
-			return (1);
+		if (!dotA.lastColBox || dotA.lastColBox.type == "Vortex") return (1);
 		let sum = Math.abs(vFinal1.x + Math.abs(vFinal1.y));
-		if (sum > 4)
-			au.playMarbleSound(dotA, sum);
+		if (sum > 2) au.playMarbleSound(dotA, sum);
 	}
-	if (colParams.dot === DotInteractionType.GROUP)
-		return (0);
+	if (colParams.dot === DotInteractionType.GROUP) return (0);
 	return (1);
 }
 
@@ -392,12 +384,7 @@ function update_self_collisions(dot, i, list = dots, shapeIndex = 0)
 		if (!other.active) break;
 		if (other == dot) continue;
 		if (colParams.link === LinkInteractionType.FAMILY && dot.hasLink && other.linkHead != dot.linkHead) continue;
-		const dx = dot.newX - other.x;
-		const dy = dot.newY - other.y;
-		const distSq = dx * dx + dy * dy;
-		const minDist = (dot.size + other.size) / 2;
-		if (distSq < minDist * minDist)
-			hasCollisions += resolveSelfCollision(dot, other);
+		hasCollisions += resolveSelfCollision(dot, other);
 	}
 	if (shapes[shapeIndex])
 		hasCollisions += update_self_collisions(dot, i, shapes[shapeIndex].dots, shapeIndex + 1);
@@ -450,7 +437,7 @@ function updateBorderCollision(dot) {
 		if (valueUsed < minTreshold)
 			dot.velocityY = 0;
 	}
-	if (valueUsed > 2 && !dot.shape)
+	if (valueUsed > 10 && !dot.shape)
 		au.playMarbleSound(dot, valueUsed);
 	return hasImpact;
 }

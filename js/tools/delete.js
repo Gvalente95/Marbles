@@ -10,15 +10,15 @@ function deleteDots() {
 }
 
 function deleteDot(d) {
-	if (!d.active)
-		return;
 	if (typeof d.onRemove === "function") d.onRemove();
+	else deleteDotLinks(d);
 	d.style.display = "none";
 	d.active = false;
 	const i = dots.indexOf(d);
-	if (i !== -1) {
+	if (i !== -1)
 		dots.splice(i, 1);
-	}
+	if (d == selDot)
+		selDot = null;
 }
 
 function deleteBoxes() {

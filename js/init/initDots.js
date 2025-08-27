@@ -22,6 +22,7 @@ function getDot(x, y, size, angle = f_range(0, 2 * Math.PI), isInBox = false, sh
 	dot.lifetime = 0;
 	dot.size = size;
 	dot.canTp = true;
+	dot.isJittering = false;
 	dot.radius = size / 2;
 	dot.lastColBox = null;
 	dot.shape = shape;

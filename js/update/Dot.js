@@ -87,7 +87,7 @@ function updateDot(dot, i)
 		applyGravity(dot);
 	let impact = 0;
 	impact += updateBorderCollision(dot);
-	impact += update_self_collisions(dot, i);
+	update_self_collisions(dot, i);
 	let boxImpacts = update_box_collisions(dot);
 	if (!boxImpacts)
 		lastColBox = null;
@@ -111,8 +111,6 @@ function updateDots() {
 		if (!dots[di].active)
 			break;
 		updateDot(dots[di], di);
-		if (dots[di].isLinkHead)
-			debugDot(dots[di]);
 	}
 	dotsAlive = di;
 	for (let i = 0;  i < dots_destroyed.length; i++)
